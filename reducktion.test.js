@@ -1,4 +1,4 @@
-import { createModel, createDucks } from './index';
+import { createModel, createDucks } from './src/reducktion';
 
 describe('createModel', () => {
   it('should init a model', () => {
