@@ -1,0 +1,66 @@
+{
+  "name": "reducktion",
+  "version": "0.0.0-development",
+  "description": "A Redux helper library for more modular and compact code following the ducks pattern",
+  "main": "lib/reducktion.js",
+  "module": "lib/reducktion.es.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "commit": "git-cz",
+    "test": "jest",
+    "prebuild": "rimraf lib",
+    "build": "rollup -c",
+    "build:watch": "rollup -c --watch",
+    "semantic-release": "semantic-release",
+    "clean:install": "rimraf node_modules && npm install",
+    "link:examples": "npm link && cd examples && npm link reducktion",
+    "travis-deploy-once": "travis-deploy-once"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Temzasse/reducktion.git"
+  },
+  "keywords": [
+    "redux",
+    "ducks",
+    "pattern",
+    "modular",
+    "utility"
+  ],
+  "files": [
+    "lib"
+  ],
+  "author": "Teemu Taskula <teemu.taskula@taitounited.fi>",
+  "license": "MIT",
+  "dependencies": {
+    "redux-actions": "2.6.1"
+  },
+  "bugs": {
+    "url": "https://github.com/Temzasse/reducktion/issues"
+  },
+  "homepage": "https://github.com/Temzasse/reducktion#readme",
+  "unpkg": "lib/reducktion.js",
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-register": "^6.26.0",
+    "commitizen": "^2.10.1",
+    "cz-conventional-changelog": "^2.1.0",
+    "husky": "^0.14.3",
+    "jest": "^23.0.0",
+    "prettier": "^1.10.2",
+    "rimraf": "^2.6.2",
+    "rollup": "^0.63.5",
+    "rollup-plugin-babel": "^3.0.7",
+    "semantic-release": "^15.9.3",
+    "travis-deploy-once": "^5.0.1"
+  },
+  "config": {
+    "commitizen": {
+      "path": "node_modules/cz-conventional-changelog"
+    }
+  }
+}
