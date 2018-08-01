@@ -1,0 +1,57 @@
+---
+extends:
+  - airbnb
+  - prettier
+  - prettier/react
+
+parser:
+  babel-eslint
+
+parserOptions:
+  ecmaVersion: 7
+
+env:
+  browser: true
+  node: true
+  es6: true
+  jest: true
+
+plugins:
+  - prettier
+
+# 0: off, 1: warning, 2: error
+rules:
+  prettier/prettier:
+    - error
+    - singleQuote: true
+      trailingComma: es5
+  # single quotes
+  quotes: [2, "single"]
+  # 2 space indentation
+  indent: ["error", 2, { SwitchCase: 1 }]
+  # Allow _function/variable names (to show privateness)
+  no-underscore-dangle: 0
+  # Commas always at the end of line
+  comma-style: [2, "last"]
+  # 80 char line length
+  max-len: [2, 80, 1]
+  # console is fine
+  no-console: 0
+  # Annoying
+  react/prefer-stateless-function: 0
+  # Annoying in reduce stores
+  no-param-reassign: 0
+  # TODO: modify code so that this is not necessary
+  react/jsx-no-bind: 0
+  # Allow .js
+  react/jsx-filename-extension: 0
+  # Allow all proptypes
+  react/forbid-prop-types: 0
+  react/require-default-props: 0
+  no-plusplus: 0
+  class-methods-use-this: 0
+  no-use-before-define: 0
+  no-case-declarations: 0
+  global-require: 0
+  # CRLF
+  linebreak-style: 0
