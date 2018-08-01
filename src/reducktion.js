@@ -4,7 +4,7 @@ import { createAction, handleActions } from 'redux-actions';
 // Helpers -------------------------------------------------------------------
 
 // JSDoc typedefs
-// TODO: maybe use TypeScript?
+// TODO: maybe use TypeScript or Flow?
 
 /**
  * @typedef {Object.<string, Function>} Action
