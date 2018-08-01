@@ -191,7 +191,7 @@ Let's start with a short story:
 It's very common that one duck model depends partially on some other duck model, and in extreme case they both depend on each other in some way! For example consider a situation where you want to fetch the existing orders of a user after he/she logs in so you import the `orderDucks` model into user duck model in order to use the `orderDucks.actions.fetchOrders()` after login. But you also want to clear the order's state after the user logs out so you import `userDucks` into order duck model to listen the `userDucks.types.LOGOUT` action type in the reducer. Now you have a circular dependency issue since both duck models are dependent on each other. When you run your app you will most likely get a `Uncaught TypeError: Cannot read property 'types' of undefined`.
 
 Reducktion solves this issue by allowing you to define the dependencies that should be injected to the model via the `inject` method.
-You can give any number of model names to `inject` and they will be provided to the model inside the various methods like `.reducer()`, `.actions()` or `.operations()`.
+You can give any number of model names to `inject` and they will be provided to the model inside the various methods like `.reducer()`, `.actions()` or `.sagas()`.
 
 In the below example we clear the orders in the state when the user logs out:
 
@@ -309,7 +309,7 @@ const model = createModel(
       orders: action.payload,
     }),
   }))
-  .operations(({ types }) => [
+  .sagas(({ types }) => [
     takeEvery(types.FETCH_ORDERS, fetchOrdersSaga),
     takeLatest(types.OTHER, otherSaga)
   ])
@@ -342,22 +342,35 @@ import { createDucks } from 'reducktion';
 import userDucks from '../user/user.ducks';
 import orderDucks from '../order/order.ducks';
 
+// Simple way:
+
+const ducks = createDucks([userDucks, orderDucks]);
+
+const rootReducer = combineReducers(ducks.allReducers);
+
+// Start all sagas
+function* rootSaga() {
+  yield all(ducks.allSagas);
+}
+
+/*
+A more manual way to do the same:
+
 const { user, order } = createDucks([userDucks, orderDucks]);
 
 const rootReducer = combineReducers({
   [user.name]: user.getReducer(),
   [order.name]: order.getReducer(),
-  /* other reducers... */
 });
 
+// Start all sagas
 function* rootSaga() {
-  // Start all sagas
   yield all([
-    ...user.getOperations(),
-    ...order.getOperations(),
-    /* other saga operations... */
-  ])
+    ...user.getSagas(),
+    ...order.getSagas(),
+  ]);
 }
+*/
 
 const sagaMiddleware = createSagaMiddleware();
 const enhancer = applyMiddleware(sagaMiddleware);
@@ -414,7 +427,7 @@ const model = createModel(
     getIsLoading: state => state[name].isLoading,
     getHasError: state => state[name].hasError,
   })
-  .operations(({ types, user }) => [
+  .sagas(({ types, user }) => [
     // Provide injected user model to saga handler too
     takeEvery(types.FETCH_ORDERS, fetchOrdersSaga, { user }),
   ])
