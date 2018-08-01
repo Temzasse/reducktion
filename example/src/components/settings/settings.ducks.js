@@ -1,4 +1,4 @@
-import { createModel } from 'reducktion';
+import { createModel } from 'reducktion'; // eslint-disable-line
 
 const model = createModel(
   'settings',
@@ -11,7 +11,7 @@ const model = createModel(
 )
   .inject('user', 'order')
   .reducer(({ types, initialState }) => ({
-    [types.RESET_SETTINGS]: state => ({ ...initialState }),
+    [types.RESET_SETTINGS]: () => ({ ...initialState }),
     [types.TOGGLE_NOTIFICATIONS]: state => ({
       ...state,
       notificationsEnabled: !state.notificationsEnabled,
@@ -25,7 +25,7 @@ const model = createModel(
       theme: action.payload || 'light',
     }),
   }))
-  .actions(({ types }) => ({
+  .actions(() => ({
     testThunk,
   }))
   .create();

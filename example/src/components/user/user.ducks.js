@@ -1,5 +1,5 @@
 import { takeEvery } from 'redux-saga/effects';
-import { createModel } from 'reducktion';
+import { createModel } from 'reducktion'; // eslint-disable-line
 
 const model = createModel(
   'user',
@@ -23,12 +23,12 @@ const model = createModel(
   .selectors(({ name }) => ({
     getCustomSelector: state => state[name].profile,
   }))
-  .operations(({ types, order }) => [
+  .sagas(({ types, order }) => [
     takeEvery([types.FETCH_PROFILE], fetchProfileSaga),
     takeEvery([types.LOGIN], loginSaga),
     takeEvery([order.types.FETCH_ORDERS], reactToFetchOrdersSaga),
   ])
-  .create()
+  .create();
 
 function* fetchProfileSaga() {
   yield console.log('> fetch profile');

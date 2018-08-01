@@ -23,7 +23,7 @@ import { createAction, handleActions } from 'redux-actions';
  * @property {Function} actions
  * @property {Function} selectors
  * @property {Function} reducer
- * @property {Function} operations
+ * @property {Function} sagas
  * @property {Function} inject
  */
 
@@ -32,7 +32,7 @@ import { createAction, handleActions } from 'redux-actions';
  * @property {Function} _run
  * @property {Function} _fillDeps
  * @property {Boolean} _created
- * @property {Function} getOperations
+ * @property {Function} getSagas
  * @property {Function} getReducer
  * @property {String} name
  * @property {Action} actions
@@ -95,7 +95,7 @@ export const createModel = (modelName, typeList, initialState) => {
     return acc;
   }, {});
 
-  let operations;
+  let sagas;
   let reducer;
 
   /**
@@ -116,7 +116,7 @@ export const createModel = (modelName, typeList, initialState) => {
         actions[actionName] = createAction(value);
       } else {
         throw Error(
-          `Unknown type for action ${actionName} - expected a string or function.`
+          `Unknown type for action ${actionName} - expected a string or function.` // eslint-disable-line
         );
       }
     });
@@ -152,13 +152,13 @@ export const createModel = (modelName, typeList, initialState) => {
   };
 
   /**
-   * Defines a curried function for operations that is later provided with
+   * Defines a curried function for sagas that is later provided with
    * types, initial state, and dependencies.
-   * @param {Function} operationsFunc
+   * @param {Function} sagasFunc
    * @returns {DuckFuncs}
    */
-  funcs.operations = operationsFunc => {
-    operations = operationsFunc;
+  funcs.sagas = sagasFunc => {
+    sagas = sagasFunc;
     return funcs;
   };
 
@@ -197,18 +197,19 @@ export const createModel = (modelName, typeList, initialState) => {
   };
 
   /**
-   * Run the curried reducer and operations functions with the necessary data.
+   * Run the curried reducer and sagas functions with the necessary data.
    */
   const _run = () => {
     // Run curried functions with own types and dependencies
 
     if (reducer) {
-      const reducerObj = reducer({ types, initialState, ...dependencies }) || {};
+      const reducerObj =
+        reducer({ types, initialState, ...dependencies }) || {};
       reducer = handleActions(reducerObj, initialState);
     }
 
-    if (operations) {
-      operations = operations({ types, ...dependencies }) || [];
+    if (sagas) {
+      sagas = sagas({ types, ...dependencies }) || [];
     }
   };
 
@@ -219,29 +220,27 @@ export const createModel = (modelName, typeList, initialState) => {
   const getReducer = () => reducer;
 
   /**
-   * Get saga operations for the duck.
+   * Get sagas for the duck.
    * @returns {Array}
    */
-  const getOperations = () => operations;
+  const getSagas = () => sagas || [];
 
   /**
    * Collect and return all the properties of the duck.
    * @returns {Duck}
    */
-  funcs.create = () => {
-    return {
-      name: modelName,
-      types,
-      actions,
-      selectors,
-      initialState,
-      getOperations,
-      getReducer,
-      _run,
-      _fillDeps,
-      _created: true,
-    };
-  };
+  funcs.create = () => ({
+    name: modelName,
+    types,
+    actions,
+    selectors,
+    initialState,
+    getSagas,
+    getReducer,
+    _run,
+    _fillDeps,
+    _created: true,
+  });
 
   return funcs;
 };
@@ -261,7 +260,7 @@ export const createDucks = (ducks = []) => {
   Object.values(ducksByName).forEach(duck => {
     if (!duck._created) {
       throw Error(
-        'Duck was not properly cretead before calling createDucks - did you forget to call .create()?'
+        'Duck was not properly cretead before calling createDucks - did you forget to call .create()?' // eslint-disable-line
       );
     }
 
@@ -274,5 +273,21 @@ export const createDucks = (ducks = []) => {
     delete duck._created;
   });
 
-  return ducksByName;
+  const getAllReducers = () =>
+    Object.values(ducksByName).reduce((acc, val) => {
+      acc[val.name] = val.getReducer();
+      return acc;
+    }, {});
+
+  const getAllSagas = () =>
+    Object.values(ducksByName).reduce(
+      (acc, val) => acc.concat(...val.getSagas()),
+      []
+    );
+
+  return {
+    ...ducksByName,
+    allReducers: getAllReducers(),
+    allSagas: getAllSagas(),
+  };
 };

@@ -11,7 +11,7 @@ describe('createModel', () => {
     expect(model).toHaveProperty('actions');
     expect(model).toHaveProperty('selectors');
     expect(model).toHaveProperty('reducer');
-    expect(model).toHaveProperty('operations');
+    expect(model).toHaveProperty('sagas');
     expect(model).toHaveProperty('inject');
   });
 
@@ -24,7 +24,7 @@ describe('createModel', () => {
         'actions',
         'selectors',
         'initialState',
-        'getOperations',
+        'getSagas',
         'getReducer',
         '_run',
         '_fillDeps',
@@ -74,16 +74,16 @@ describe('createModel', () => {
     expect(model.getReducer()).toBeDefined();
   });
 
-  it('should accept operations definition function', () => {
+  it('should accept sagas definition function', () => {
     const model = createModel('test', ['TEST', 'OTHER'], { field: '123' })
-      .operations(() => [])
+      .sagas(() => [])
       .create();
-    expect(model.getOperations()).toBeDefined();
+    expect(model.getSagas()).toBeDefined();
   });
 
   it('should throw error when unknown action is defined', () => {
     expect(() => {
-      const model = createModel('test', ['TEST', 'OTHER'], {}).actions(() => ({
+      createModel('test', ['TEST', 'OTHER'], {}).actions(() => ({
         incorrectAction: 1,
       }));
     }).toThrowError(/expected a string or function/);
@@ -91,17 +91,22 @@ describe('createModel', () => {
 });
 
 describe('createDucks', () => {
-  it('should return empty object when no ducks are provided', () => {
+  // eslint-disable-next-line
+  it('should not return any individual ducks when no ducks are provided', () => {
     const ducks = createDucks();
-    expect(ducks).toEqual({});
+    expect(Object.keys(ducks).sort()).toEqual(
+      ['allReducers', 'allSagas'].sort()
+    );
   });
 
   it('should create a duck with correct properties', () => {
-    const name = 'settings';
-    const types = ['TOGGLE_NOTIFICATIONS'];
     const initialState = { notificationsEnabled: false };
 
-    const model = createModel(name, types, initialState)
+    const model = createModel(
+      'settings',
+      ['TOGGLE_NOTIFICATIONS'],
+      initialState
+    )
       .reducer(({ types }) => ({
         [types.TOGGLE_NOTIFICATIONS]: state => ({
           ...state,
@@ -114,7 +119,7 @@ describe('createDucks', () => {
       .selectors(({ name }) => ({
         getCustomSelector: state => state[name].notificationsEnabled,
       }))
-      .operations(() => [])
+      .sagas(() => [])
       .create();
 
     const { settings } = createDucks([model]);
@@ -126,11 +131,11 @@ describe('createDucks', () => {
         'types',
         'actions',
         'selectors',
-        'getOperations',
+        'getSagas',
         'getReducer',
       ].sort()
     );
-    expect(settings.name).toEqual(name);
+    expect(settings.name).toEqual('settings');
     expect(settings.types).toEqual({
       TOGGLE_NOTIFICATIONS: 'settings/TOGGLE_NOTIFICATIONS',
     });
@@ -141,13 +146,14 @@ describe('createDucks', () => {
     expect(Object.keys(settings.selectors).sort()).toEqual(
       ['getCustomSelector', 'getNotificationsEnabled'].sort()
     );
-    expect(settings.getOperations()).toEqual([]);
+    expect(settings.getSagas()).toEqual([]);
   });
 
+  // eslint-disable-next-line
   it('should throw error if model was not created before calling createDucks', () => {
     const model = createModel('test', ['TEST'], {});
     expect(() => {
-      const ducks = createDucks([model]);
+      createDucks([model]);
     }).toThrowError(/did you forget to call .create()/);
   });
 
@@ -182,7 +188,7 @@ describe('createDucks', () => {
       .create();
 
     expect(() => {
-      const ducks = createDucks([model1, model2]);
+      createDucks([model1, model2]);
     }).toThrowError(/There is no dependendy called 'test3'/);
   });
 });
