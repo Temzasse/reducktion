@@ -4,7 +4,9 @@
   "description": "A Redux helper library for more modular and compact code following the ducks pattern",
   "main": "lib/reducktion.js",
   "module": "lib/reducktion.es.js",
-  "files": ["lib"],
+  "files": [
+    "lib"
+  ],
   "author": "Teemu Taskula <teemu.taskula@taitounited.fi>",
   "license": "MIT",
   "homepage": "https://github.com/Temzasse/reducktion#readme",
@@ -22,7 +24,7 @@
     "build": "rollup -c",
     "build:watch": "rollup -c --watch",
     "install:clean": "rimraf node_modules && npm install",
-    "link:examples": "npm link && cd examples && npm link reducktion",
+    "link:example": "npm link && cd example && npm link reducktion",
     "semantic-release": "semantic-release",
     "travis-deploy-once": "travis-deploy-once"
   },

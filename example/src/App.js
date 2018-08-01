@@ -1,21 +1,45 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import styled from 'styled-components';
+
+import OrderExample from './components/order';
+import UserExample from './components/user';
+import SettingsExample from './components/settings';
 
 class App extends Component {
   render() {
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to React</h1>
-        </header>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
-      </div>
+      <Container>
+        <Section>
+          <OrderExample />
+        </Section>
+
+        <Section>
+          <UserExample />
+        </Section>
+
+        <Section>
+          <SettingsExample />
+        </Section>
+      </Container>
     );
   }
 }
+
+const Container = styled.div`
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  padding: 48px;
+`;
+
+const Section = styled.div`
+  padding: 32px;
+  background-color: #fff;
+  border-radius: 16px;
+  margin-bottom: 32px;
+  box-shadow: 0px 4px 16px rgba(0,0,0,0.1);
+`;
 
 export default App;
