@@ -4,8 +4,16 @@
   "description": "A Redux helper library for more modular and compact code following the ducks pattern",
   "main": "lib/reducktion.js",
   "module": "lib/reducktion.es.js",
+  "files": ["lib"],
+  "author": "Teemu Taskula <teemu.taskula@taitounited.fi>",
+  "license": "MIT",
+  "homepage": "https://github.com/Temzasse/reducktion#readme",
+  "unpkg": "lib/reducktion.js",
   "directories": {
     "example": "examples"
+  },
+  "bugs": {
+    "url": "https://github.com/Temzasse/reducktion/issues"
   },
   "scripts": {
     "commit": "git-cz",
@@ -29,19 +37,9 @@
     "modular",
     "utility"
   ],
-  "files": [
-    "lib"
-  ],
-  "author": "Teemu Taskula <teemu.taskula@taitounited.fi>",
-  "license": "MIT",
   "dependencies": {
     "redux-actions": "2.6.1"
   },
-  "bugs": {
-    "url": "https://github.com/Temzasse/reducktion/issues"
-  },
-  "homepage": "https://github.com/Temzasse/reducktion#readme",
-  "unpkg": "lib/reducktion.js",
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
