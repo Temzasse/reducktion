@@ -21,19 +21,19 @@ Inspiration: [Ducks: Redux Reducer Bundles](https://github.com/erikras/ducks-mod
 ---
 
 - [Getting started](#getting-started)
-  - [Install](#install)
+  - [Installation](#installation)
   - [The Idea](#the-idea)
   - [Usage](#usage)
-- [Dependency injection](dependency-injection)
-- [Usage with redux-thunk](usage-with-redux-thunk)
-- [Usage with redux-saga](usage-with-redux-saga)
-- [Example with everything](example-with-everything)
-- [Other similar libraries](other-similar-libraries)
-- [TODOS and IDEAS](todos-and-ideas)
+- [Dependency injection](#dependency-injection)
+- [Usage with redux-thunk](#usage-with-redux-thunk)
+- [Usage with redux-saga](#usage-with-redux-saga)
+- [Example with everything](#example-with-everything)
+- [Other similar libraries](#other-similar-libraries)
+- [TODOS and IDEAS](#todos-and-ideas)
 
-# Getting started
+# reduktion
 
-## Install
+## Installation
 
 ```sh
 $ npm install reducktion
@@ -198,7 +198,7 @@ That's it!
 
 You have encapsulated the redux related logic of a feature called `order` into a duck model 👏 🎉
 
-# Dependency injection
+## Dependency injection
 
 Let's start with a short story:
 
@@ -242,7 +242,7 @@ const model = createModel(
 export default model;
 ```
 
-# Usage with redux-thunk
+## Usage with redux-thunk
 
 Using [redux-thunk](https://github.com/reduxjs/redux-thunk) is fairly simple: you only need to provide the thunk functions alongside with the other action creators.
 
@@ -304,14 +304,14 @@ function otherThunkWithInjects(args, { user }) {
 export default model;
 ```
 
-# Usage with redux-saga
+## Usage with redux-saga
 
 It is also possible to use [redux-saga](https://github.com/redux-saga/redux-saga) with Reducktion by using the `.sagas` method of the model to define the list of saga watchers that should react to corresponding actions.
 
 Note that Reducktion has no dependency of redux-saga to keep the library size small!
-
 So, you need to install redux-saga yourself and import all the helpers you need from it.
-Basically the `.sagas` method just provides you the necessary things (own types and dependencies) you need to bootstap your sagas.
+
+Basically the `.sagas` method just provides you the necessary things (own types and dependencies) you need to bootstrap your sagas.
 
 ```javascript
 import { createModel } from 'reducktion';
@@ -410,9 +410,9 @@ const store = createStore(rootReducer, initialState, enhancer);
 sagaMiddleware.run(rootSaga);
 ```
 
-# Example with everything
+## Example with everything
 
-Let's cram all the goodness into a one duck model so you can see everything in one place 😎
+Let's cram all the goodness into a single duck model so you can see everything in one place 😎
 
 ```javascript
 import { createModel } from 'reducktion';
@@ -496,12 +496,12 @@ function* fetchOrdersSaga({ user }, action) {
 export default model;
 ```
 
-# Other similar libraries
+## Other similar libraries
 
 - [Redux Bundler](https://reduxbundler.com/)
 - [List of various ducks libs](https://github.com/erikras/ducks-modular-redux#implementation)
 
-# TODOS and IDEAS
+## TODOS and IDEAS
 
 - Rewrite with TypeScript / Flow?
 - Add typings?
