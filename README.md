@@ -129,17 +129,17 @@ const model = createModel(
     // ...
   }))
   // define actions manually
-  .actions(({ types }) => {
+  .actions(({ types }) => ({
     fetchOrders: types.FETCH_ORDERS,
     fetchOrdersFailed: types.FETCH_ORDERS_FAILED,
     receiveOrders: types.RECEIVE_ORDERS,
-  })
+  }))
   // define selectors manually (NOTE: name is 'order')
-  .selectors(({ name }) => {
+  .selectors(({ name }) => ({
     getOrders: state => state[name].orders,
     getIsLoading: state => state[name].isLoading,
     getHasError: state => state[name].hasError,
-  })
+  }))
   .create();
 
 export default model;
@@ -451,17 +451,17 @@ const model = createModel(
     // clear state when user logs out
     [user.types.LOGOUT]: () => ({ ...initialState }),
   }))
-  .actions(({ types }) => {
+  .actions(({ types }) => ({
     fetchOrders: types.FETCH_ORDERS,
     fetchOrdersFailed: types.FETCH_ORDERS_FAILED,
     receiveOrders: types.RECEIVE_ORDERS,
     fetchOrders, // or as a thunk
-  })
-  .selectors(({ name }) => {
+  }))
+  .selectors(({ name }) => ({
     getOrders: state => state[name].orders,
     getIsLoading: state => state[name].isLoading,
     getHasError: state => state[name].hasError,
-  })
+  }))
   .sagas(({ types, user }) => [
     // Provide injected user model to saga handler too
     takeEvery(types.FETCH_ORDERS, fetchOrdersSaga, { user }),
