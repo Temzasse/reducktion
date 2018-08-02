@@ -28,6 +28,7 @@ Inspiration: [Ducks: Redux Reducer Bundles](https://github.com/erikras/ducks-mod
 - [Usage with redux-thunk](#usage-with-redux-thunk)
 - [Usage with redux-saga](#usage-with-redux-saga)
 - [Example with everything](#example-with-everything)
+- [API](#api)
 - [Other similar libraries](#other-similar-libraries)
 
 # reduktion
@@ -499,6 +500,10 @@ function* fetchOrdersSaga({ user }, action) {
 
 export default model;
 ```
+
+## API
+
+Check out the more detailed [API documentation](API.md).
 
 ## Other similar libraries
 
