@@ -29,7 +29,6 @@ Inspiration: [Ducks: Redux Reducer Bundles](https://github.com/erikras/ducks-mod
 - [Usage with redux-saga](#usage-with-redux-saga)
 - [Example with everything](#example-with-everything)
 - [Other similar libraries](#other-similar-libraries)
-- [TODOS and IDEAS](#todos-and-ideas)
 
 # reduktion
 
@@ -505,8 +504,3 @@ export default model;
 
 - [Redux Bundler](https://reduxbundler.com/)
 - [List of various ducks libs](https://github.com/erikras/ducks-modular-redux#implementation)
-
-## TODOS and IDEAS
-
-- Rewrite with TypeScript / Flow?
-- Add typings?
