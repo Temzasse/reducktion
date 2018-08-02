@@ -1,15 +1,18 @@
 <p align='center'>
   <br><br><br>
-  <img src="logo.png" width="400"/>
+  <img src="logo.png" alt="Reducktion logo" width="400"/>
   <br><br><br>
 <p/>
 
 *A small helper library for Redux to reduce boilerplate and enforce a more modular architecture by following the ducks pattern.*
 
+<br>
+
 * 🦆 **Modular architecture with ducks pattern.**
 * 🔮 **Less boilerplate.**
 * 💉 **Inject dependencies easily.**
 
+<br>
 
 ---
 
@@ -131,13 +134,8 @@ import { createStore, combineReducers } from 'redux';
 import { createDucks } from 'reducktion';
 import orderDucks from '../order/order.ducks';
 
-const { order } = createDucks([orderDucks /* other ducks... */]);
-
-const rootReducer = combineReducers({
-  [order.name]: order.getReducer(),
-  // other duck reducers...
-});
-
+const ducks = createDucks([orderDucks /* other ducks... */]);
+const rootReducer = combineReducers(ducks.allReducers);
 const store = createStore(rootReducer, initialState);
 ```
 
