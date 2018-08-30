@@ -1,22 +1,35 @@
 import { createModel, createDucks } from './src/reducktion';
 
 describe('createModel', () => {
-  it('should init a model', () => {
-    const model = createModel('test', ['TEST'], {});
+  it('should create a simple model', () => {
+    const model = createModel({
+      name: 'test',
+      state: {},
+      actions: () => ({}),
+    });
     expect(model).toBeDefined();
   });
 
-  it('should have correct chainable functions', () => {
-    const model = createModel('test', ['TEST'], {});
-    expect(model).toHaveProperty('actions');
-    expect(model).toHaveProperty('selectors');
-    expect(model).toHaveProperty('reducer');
-    expect(model).toHaveProperty('sagas');
-    expect(model).toHaveProperty('inject');
+  it('should throw if no name is defined', () => {
+    expect(() => {
+      createModel({});
+    }).toThrowError(/model should have a name/i);
+  });
+
+  it('should throw if state is defined but no reducers are defined', () => {
+    expect(() => {
+      createModel({ name: 'test', state: { field: 1 } });
+    }).toThrowError(/model with state should have reducers/i);
   });
 
   it('should create a model', () => {
-    const model = createModel('test', ['TEST'], {}).create();
+    const model = createModel({
+      name: 'test',
+      state: { field: 1 },
+      actions: () => ({
+        doSomething: state => ({ ...state, field: state.field + 1 }),
+      }),
+    });
     expect(Object.keys(model).sort()).toEqual(
       [
         'name',
@@ -28,65 +41,95 @@ describe('createModel', () => {
         'getReducer',
         '_run',
         '_fillDeps',
-        '_created',
       ].sort()
     );
   });
 
-  it('should have generated types after creation', () => {
-    const model = createModel('test', ['TEST', 'OTHER', 'FOO'], {}).create();
+  it('should have generated action types after creation', () => {
+    const model = createModel({
+      name: 'test',
+      state: {},
+      actions: () => ({
+        testAction1: state => ({ ...state }),
+        testAction2: undefined, // does not mutate state
+      }),
+    });
     expect(model.types).toEqual({
-      TEST: 'test/TEST',
-      OTHER: 'test/OTHER',
-      FOO: 'test/FOO',
+      testAction1: 'test/testAction1',
+      testAction2: 'test/testAction2',
     });
   });
 
   it('should have generated actions after creation', () => {
-    const model = createModel('test', ['SOMETYPE', 'OTHER_STUFF'], {}).create();
-    expect(model.actions.sometype()).toEqual({ type: 'test/SOMETYPE' });
-    expect(model.actions.otherStuff()).toEqual({ type: 'test/OTHER_STUFF' });
+    const model = createModel({
+      name: 'test',
+      state: {},
+      actions: () => ({
+        testAction1: state => ({ ...state }),
+        testAction2: undefined, // does not mutate state
+      }),
+    });
+    expect(model.actions.testAction1()).toEqual({ type: 'test/testAction1' });
+    expect(model.actions.testAction2()).toEqual({ type: 'test/testAction2' });
   });
 
   it('should have generated selectors after creation', () => {
-    const model = createModel('test', ['TEST'], {
-      someField: '1234',
-      otherField: 'xyz',
-    }).create();
-    expect(model.selectors.getSomeField).toBeDefined();
-    expect(model.selectors.getOtherField).toBeDefined();
-  });
-
-  it('should accept actions definition function', () => {
-    const model = createModel('test', ['TEST', 'OTHER'], {})
-      .actions(({ types }) => ({ customTest: types.TEST }))
-      .create();
-    expect(model.actions.customTest()).toEqual({ type: 'test/TEST' });
-    expect(model.actions.other()).toEqual({ type: 'test/OTHER' });
-  });
-
-  it('should accept reducer definition function', () => {
-    const model = createModel('test', ['TEST', 'OTHER'], { field: '123' })
-      .reducer(({ types }) => ({
-        [types.TEST]: 'foo',
-      }))
-      .create();
-    expect(model.getReducer()).toBeDefined();
+    const model = createModel({
+      name: 'test',
+      state: {
+        field1: 1,
+        field2: 2,
+      },
+      actions: () => ({
+        testAction: state => ({ ...state, field1: 2, field2: 1 }),
+      }),
+    });
+    expect(model.selectors.getField1).toBeDefined();
+    expect(model.selectors.getField2).toBeDefined();
   });
 
   it('should accept sagas definition function', () => {
-    const model = createModel('test', ['TEST', 'OTHER'], { field: '123' })
-      .sagas(() => [])
-      .create();
+    const model = createModel({
+      name: 'test',
+      state: {
+        field: 1,
+      },
+      actions: () => ({
+        testAction: state => ({ ...state }),
+      }),
+      sagas: () => [],
+    });
     expect(model.getSagas()).toBeDefined();
   });
 
-  it('should throw error when unknown action is defined', () => {
+  it('should throw if inject is not an array of model names', () => {
     expect(() => {
-      createModel('test', ['TEST', 'OTHER'], {}).actions(() => ({
-        incorrectAction: 1,
-      }));
-    }).toThrowError(/expected a string or function/);
+      createModel({
+        name: 'test',
+        inject: 123,
+        state: {
+          field: 1,
+        },
+        actions: () => ({
+          testAction: state => ({ ...state }),
+        }),
+      });
+    }).toThrowError(/array of dependency names/i);
+  });
+
+  it('should throw if injected model names are not strings', () => {
+    expect(() => {
+      createModel({
+        name: 'test',
+        inject: [123],
+        state: {
+          field: 1,
+        },
+        actions: () => ({
+          testAction: state => ({ ...state }),
+        }),
+      });
+    }).toThrowError(/names should be strings/i);
   });
 });
 
@@ -102,25 +145,20 @@ describe('createDucks', () => {
   it('should create a duck with correct properties', () => {
     const initialState = { notificationsEnabled: false };
 
-    const model = createModel(
-      'settings',
-      ['TOGGLE_NOTIFICATIONS'],
-      initialState
-    )
-      .reducer(({ types }) => ({
-        [types.TOGGLE_NOTIFICATIONS]: state => ({
+    const model = createModel({
+      name: 'settings',
+      state: initialState,
+      actions: () => ({
+        toggleNotifications: state => ({
           ...state,
           notificationsEnabled: !state.notificationsEnabled,
         }),
-      }))
-      .actions(({ types }) => ({
-        customToggleNotifications: types.TOGGLE_NOTIFICATIONS,
-      }))
-      .selectors(({ name }) => ({
+      }),
+      selectors: ({ name }) => ({
         getCustomSelector: state => state[name].notificationsEnabled,
-      }))
-      .sagas(() => [])
-      .create();
+      }),
+      sagas: () => [],
+    });
 
     const { settings } = createDucks([model]);
 
@@ -137,58 +175,90 @@ describe('createDucks', () => {
     );
     expect(settings.name).toEqual('settings');
     expect(settings.types).toEqual({
-      TOGGLE_NOTIFICATIONS: 'settings/TOGGLE_NOTIFICATIONS',
+      toggleNotifications: 'settings/toggleNotifications',
     });
     expect(settings.initialState).toEqual(initialState);
-    expect(Object.keys(settings.actions).sort()).toEqual(
-      ['toggleNotifications', 'customToggleNotifications'].sort()
-    );
+    expect(Object.keys(settings.actions).sort()).toEqual([
+      'toggleNotifications',
+    ]);
     expect(Object.keys(settings.selectors).sort()).toEqual(
       ['getCustomSelector', 'getNotificationsEnabled'].sort()
     );
     expect(settings.getSagas()).toEqual([]);
   });
 
-  // eslint-disable-next-line
-  it('should throw error if model was not created before calling createDucks', () => {
-    const model = createModel('test', ['TEST'], {});
-    expect(() => {
-      createDucks([model]);
-    }).toThrowError(/did you forget to call .create()/);
-  });
-
   it('should create multiple ducks', () => {
-    const model1 = createModel('test1', ['TEST1'], {}).create();
-    const model2 = createModel('test2', ['TEST2'], {}).create();
+    const model1 = createModel({
+      name: 'test1',
+      state: {},
+      actions: () => ({}),
+    });
+    const model2 = createModel({
+      name: 'test2',
+      state: {},
+      actions: () => ({}),
+    });
     const ducks = createDucks([model1, model2]);
     expect(ducks.test1).toBeDefined();
     expect(ducks.test2).toBeDefined();
   });
 
   it('should inject other ducks as dependency', () => {
-    const model1 = createModel('test1', ['TEST1'], {}).create();
-    const model2 = createModel('test2', ['TEST2'], {})
-      .inject('test1')
-      .reducer(({ test1 }) => ({
-        [test1.TEST1]: state => ({ ...state, foo: 1 }),
-      }))
-      .create();
-
+    const model1 = createModel({
+      name: 'test1',
+      state: {},
+      actions: () => ({
+        doSomething: undefined,
+      }),
+    });
+    const model2 = createModel({
+      name: 'test2',
+      inject: ['test1'],
+      state: {
+        field: 1,
+      },
+      actions: ({ deps }) => ({
+        [deps.test1.types.doSomething]: state => ({ ...state, field: 2 }),
+      }),
+    });
     const ducks = createDucks([model1, model2]);
     expect(ducks).toBeDefined();
   });
 
-  it('should throw error if name of dependency is typoed', () => {
-    const model1 = createModel('test1', ['TEST1'], {}).create();
-    const model2 = createModel('test2', ['TEST2'], {})
-      .inject('test3')
-      .reducer(({ test3 }) => ({
-        [test3.TEST1]: state => ({ ...state, foo: 1 }),
-      }))
-      .create();
+  it('should throw error if name of dependency is typoed in actions', () => {
+    expect(() => {
+      createModel({
+        name: 'test1',
+        inject: ['test2'],
+        state: {
+          field: 1,
+        },
+        actions: ({ deps }) => ({
+          [deps.test3.types.doSomething]: state => ({ ...state, field: 2 }),
+        }),
+      });
+    }).toThrowError(/could not create action types/i);
+  });
+
+  it('should throw error if incorrect dependency name is injected', () => {
+    const model1 = createModel({
+      name: 'test1',
+      state: {},
+      actions: () => ({
+        doSomething: undefined,
+      }),
+    });
+    const model2 = createModel({
+      name: 'test2',
+      inject: ['test3'],
+      state: {
+        field: 1,
+      },
+      actions: () => ({}),
+    });
 
     expect(() => {
       createDucks([model1, model2]);
-    }).toThrowError(/There is no dependendy called 'test3'/);
+    }).toThrowError(/there is no dependendy called 'test3'/i);
   });
 });
