@@ -34,7 +34,7 @@ So when you make changes to `src/reducktion.js` file it will be built automatica
 
 ### Git flow and commit message format
 
-When you want to work on a task you should create a new branch that preferably has the issue number in the name so that it is easy to see what the PR is related to. Example: `git checkout -b Issue#1234`.
+When you want to work on a task you should create a new branch that preferably has the issue number in the name so that it is easy to see what the PR is related to. Example: `git checkout -b issue#1234`.
 
 This project uses [semantic-release](https://github.com/semantic-release/semantic-release) to automatically determine the version number for the library based on the commit messages. This means that **YOU HAVE TO FOLLOW** the commit message conventions described [here](https://docs.google.com/document/d/1QrDFcIiPjSLDn3EL15IJygNPiHORgU1_OOAqWjiDU5Y/edit). If you don't have time to read the document you can just look at the [commit history](https://github.com/Temzasse/reducktion/commits/master) for a reference.
 
