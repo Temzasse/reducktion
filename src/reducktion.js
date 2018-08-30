@@ -1,7 +1,6 @@
 // @ts-check
 import { createAction, handleActions } from 'redux-actions';
-
-// Helpers -------------------------------------------------------------------
+import { capitalize, isFunction, validateInject } from './helpers';
 
 // JSDoc typedefs
 // TODO: maybe use TypeScript or Flow?
@@ -19,12 +18,13 @@ import { createAction, handleActions } from 'redux-actions';
  */
 
 /**
- * @typedef {Object} DuckFuncs
+ * @typedef {Object} DuckDefinition
+ * @property {String} name
+ * @property {Object} state
+ * @property {String[]} inject
  * @property {Function} actions
  * @property {Function} selectors
- * @property {Function} reducer
  * @property {Function} sagas
- * @property {Function} inject
  */
 
 /**
@@ -41,139 +41,107 @@ import { createAction, handleActions } from 'redux-actions';
  * @property {Object.<string, any>} initialState
  */
 
-const capitalize = word => word.charAt(0).toUpperCase() + word.slice(1);
-
-const isFunction = f => f && {}.toString.call(f) === '[object Function]';
-
-const camelCasedAction = action =>
-  action
-    .toLowerCase()
-    .split('_')
-    .reduce((acc, x, i) => (i === 0 ? acc + x : acc + capitalize(x)), '');
-
-/**
- * Helper function to create prefixed types for a duck.
- * @param {string} prefix
- * @param {string[]} actionTypes
- * @returns {Types}
- */
-function createTypes(prefix, actionTypes = []) {
-  return actionTypes.reduce((acc, type) => {
-    acc[type] = `${prefix}/${type}`;
-    return acc;
-  }, {});
-}
-
-function createActions(prefix, actionTypes) {
-  return actionTypes.reduce((acc, type) => {
-    const actionName = camelCasedAction(type);
-    acc[actionName] = createAction(`${prefix}/${type}`);
-    return acc;
-  }, {});
-}
-// ---------------------------------------------------------------------------
-
 /**
  * Creates a ducks model and returns chainable functions to define futher props.
  * @param {string} modelName
  * @param {string[]} typeList
- * @param {Object.<string, any>} initialState
- * @returns {DuckFuncs} Chainable duck functions
+ * @param {Object.<string, any>} modelDefinition
+ * @returns {Duck}
  */
-export const createModel = (modelName, typeList, initialState) => {
-  const funcs = {};
+export const createModel = modelDefinition => {
+  if (!modelDefinition.name) {
+    throw Error('Model should have a name');
+  }
+
+  if (modelDefinition.state && !modelDefinition.actions) {
+    throw Error('Model with state should have reducers');
+  }
+
   const dependencies = {};
+  let { sagas } = modelDefinition;
+  let types = {};
+  let reducer;
 
-  const types = createTypes(modelName, typeList);
+  if (modelDefinition.inject) {
+    validateInject(modelDefinition.inject);
 
-  // Auto-generate initial actions
-  const actions = createActions(modelName, typeList);
+    modelDefinition.inject.forEach(depName => {
+      dependencies[depName] = null;
+    });
+  }
 
-  // Auto-generate initial selectors for each state field
-  const selectors = Object.keys(initialState).reduce((acc, key) => {
-    acc[`get${capitalize(key)}`] = state => state[modelName][key];
+  // Create types from actions
+  if (modelDefinition.actions) {
+    /* eslint-disable */
+    const fakeDeps = modelDefinition.inject
+      ? modelDefinition.inject.reduce((acc, i) => {
+          acc[i] = { types: {} };
+          return acc;
+        }, {})
+      : {};
+    /* eslint-enable */
+    const fakeSelf = { deps: fakeDeps };
+
+    let actionsExec;
+
+    // Execute actions func once to get return object keys for action types
+    try {
+      actionsExec = modelDefinition.actions(fakeSelf) || {};
+    } catch (e) {
+      // Maybe some injected model was typoed
+      if (modelDefinition.inject) {
+        throw Error(
+          `Could not create action types, invalid model name used in ${
+            modelDefinition.name
+          } actions`
+        );
+      } else {
+        throw e;
+      }
+    }
+
+    // Generate types from actions return object keys
+    types = Object.keys(actionsExec)
+      .filter(Boolean)
+      .reduce((acc, actionName) => {
+        acc[actionName] = `${modelDefinition.name}/${actionName}`;
+        return acc;
+      }, {});
+  }
+
+  // Create actions from generate types
+  const actions = Object.entries(types).reduce((acc, [actionName, value]) => {
+    if (isFunction(value)) {
+      // Provide dependencies to thunks
+      acc[actionName] = (...args) => value(...args, dependencies);
+    } else if (typeof value === 'string') {
+      // Just create normal action
+      acc[actionName] = createAction(value);
+    } else {
+      throw Error(
+        `Unknown type for action ${actionName} - expected a string or function.`
+      );
+    }
     return acc;
   }, {});
 
-  let sagas;
-  let reducer;
+  // Auto-generate initial selectors for each state field
+  const selectors = Object.keys(modelDefinition.state).reduce((acc, key) => {
+    acc[`get${capitalize(key)}`] = state => state[modelDefinition.name][key];
+    return acc;
+  }, {});
 
-  /**
-   * Creates action creators and thunks.
-   * @param {Function} actionsFunc
-   * @returns {DuckFuncs}
-   */
-  funcs.actions = actionsFunc => {
-    const userDefinedActions = actionsFunc({ types }) || {};
-
-    // @ts-ignore
-    Object.entries(userDefinedActions).forEach(([actionName, value]) => {
-      if (isFunction(value)) {
-        // Provide dependencies to thunks
-        actions[actionName] = (...args) => value(...args, dependencies);
-      } else if (typeof value === 'string') {
-        // Just create normal action
-        actions[actionName] = createAction(value);
-      } else {
-        throw Error(
-          `Unknown type for action ${actionName} - expected a string or function.` // eslint-disable-line
-        );
-      }
-    });
-    return funcs;
-  };
-
-  /**
-   * Extends auto-generated selectors for the duck.
-   * @param {Function} selectorsFunc
-   * @returns {DuckFuncs}
-   */
-  funcs.selectors = selectorsFunc => {
-    const userDefinedSelectors = selectorsFunc({ name: modelName }) || {};
-
+  // Add selectors defined by user
+  if (modelDefinition.selectors) {
+    const userDefinedSelectors =
+      modelDefinition.selectors({ name: modelDefinition.name }) || {};
     // @ts-ignore
     Object.entries(userDefinedSelectors).forEach(
       ([selectorName, selectorFn]) => {
         selectors[selectorName] = selectorFn;
       }
     );
-    return funcs;
-  };
-
-  /**
-   * Defines a curried function for reducer that is later provided with
-   * types, initial state, and dependencies.
-   * @param {Function} reducerFunc
-   * @returns {DuckFuncs}
-   */
-  funcs.reducer = reducerFunc => {
-    reducer = reducerFunc;
-    return funcs;
-  };
-
-  /**
-   * Defines a curried function for sagas that is later provided with
-   * types, initial state, and dependencies.
-   * @param {Function} sagasFunc
-   * @returns {DuckFuncs}
-   */
-  funcs.sagas = sagasFunc => {
-    sagas = sagasFunc;
-    return funcs;
-  };
-
-  /**
-   * Defines the dependencies of the duck which should be injected to it later.
-   * @param {...string} deps
-   * @returns {DuckFuncs}
-   */
-  funcs.inject = (...deps) => {
-    deps.forEach(depName => {
-      dependencies[depName] = null;
-    });
-
-    return funcs;
-  };
+  }
 
   /**
    * Fills in the dependencies that were requested when calling inject.
@@ -190,7 +158,9 @@ export const createModel = (modelName, typeList, initialState) => {
         };
       } else {
         throw Error(
-          `There is no dependendy called '${dep}' for ${modelName} model.`
+          `There is no dependendy called '${dep}' for ${
+            modelDefinition.name
+          } model.` // eslint-disable-line
         );
       }
     });
@@ -200,16 +170,18 @@ export const createModel = (modelName, typeList, initialState) => {
    * Run the curried reducer and sagas functions with the necessary data.
    */
   const _run = () => {
-    // Run curried functions with own types and dependencies
-
-    if (reducer) {
+    // Run duck action functions with own types and dependencie to get reducer
+    if (modelDefinition.actions) {
       const reducerObj =
-        reducer({ types, initialState, ...dependencies }) || {};
-      reducer = handleActions(reducerObj, initialState);
+        modelDefinition.actions({
+          initialState: modelDefinition.state,
+          deps: dependencies,
+        }) || {};
+      reducer = handleActions(reducerObj, modelDefinition.state);
     }
 
     if (sagas) {
-      sagas = sagas({ types, ...dependencies }) || [];
+      sagas = sagas({ types, deps: dependencies });
     }
   };
 
@@ -225,24 +197,17 @@ export const createModel = (modelName, typeList, initialState) => {
    */
   const getSagas = () => sagas || [];
 
-  /**
-   * Collect and return all the properties of the duck.
-   * @returns {Duck}
-   */
-  funcs.create = () => ({
-    name: modelName,
+  return {
+    name: modelDefinition.name,
+    initialState: modelDefinition.state,
     types,
     actions,
     selectors,
-    initialState,
     getSagas,
     getReducer,
     _run,
     _fillDeps,
-    _created: true,
-  });
-
-  return funcs;
+  };
 };
 
 /**
@@ -258,19 +223,12 @@ export const createDucks = (ducks = []) => {
 
   // @ts-ignore
   Object.values(ducksByName).forEach(duck => {
-    if (!duck._created) {
-      throw Error(
-        'Duck was not properly cretead before calling createDucks - did you forget to call .create()?' // eslint-disable-line
-      );
-    }
-
     duck._fillDeps(ducksByName);
     duck._run();
 
     // Users don't need these props so delete them
     delete duck._fillDeps;
     delete duck._run;
-    delete duck._created;
   });
 
   const getAllReducers = () =>
