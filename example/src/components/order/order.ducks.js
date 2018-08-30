@@ -9,7 +9,7 @@ const model = createModel({
     isLoading: false,
     hasError: false,
   },
-  actions: ({ deps }) => ({
+  actions: () => ({
     fetchOrders: state => ({ ...state, isLoading: true }),
     failFetchOrders: state => ({
       ...state,
@@ -22,7 +22,9 @@ const model = createModel({
       hasError: false,
       orders: action.payload,
     }),
-    [deps.user.types.LOGIN]: state => ({ ...state, isLoading: true }),
+  }),
+  reactions: ({ deps }) => ({
+    [deps.user.types.login]: state => ({ ...state, isLoading: true }),
   }),
   selectors: ({ name }) => ({
     getCustomSelector: state => [...state[name].orders, 'lol'],
