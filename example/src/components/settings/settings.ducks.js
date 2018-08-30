@@ -1,34 +1,30 @@
 import { createModel } from 'reducktion'; // eslint-disable-line
 
-const model = createModel(
-  'settings',
-  ['TOGGLE_NOTIFICATIONS', 'TOGGLE_GPS', 'UPDATE_THEME', 'RESET_SETTINGS'],
-  {
+const model = createModel({
+  name: 'settings',
+  inject: ['user', 'order'],
+  state: {
     notificationsEnabled: false,
     gpsEnabled: false,
     selectedTheme: 'light',
-  }
-)
-  .inject('user', 'order')
-  .reducer(({ types, initialState }) => ({
-    [types.RESET_SETTINGS]: () => ({ ...initialState }),
-    [types.TOGGLE_NOTIFICATIONS]: state => ({
+  },
+  actions: ({ initialState }) => ({
+    resetSettings: () => ({ ...initialState }),
+    toggleNotifications: state => ({
       ...state,
       notificationsEnabled: !state.notificationsEnabled,
     }),
-    [types.TOGGLE_GPS]: state => ({
+    toggleGps: state => ({
       ...state,
       gpsEnabled: !state.gpsEnabled,
     }),
-    [types.UPDATE_THEME]: (state, action) => ({
+    updateTheme: (state, action) => ({
       ...state,
       theme: action.payload || 'light',
     }),
-  }))
-  .actions(() => ({
     testThunk,
-  }))
-  .create();
+  }),
+});
 
 // Thunks
 function testThunk(arg, { user, order }) {
