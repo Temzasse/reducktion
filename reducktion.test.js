@@ -217,27 +217,15 @@ describe('createDucks', () => {
       state: {
         field: 1,
       },
-      actions: ({ deps }) => ({
-        [deps.test1.types.doSomething]: state => ({ ...state, field: 2 }),
+      actions: () => ({
+        doSomethingElse: state => ({ ...state, field: 2 }),
+      }),
+      reactions: ({ deps }) => ({
+        [deps.test1.types.doSomething]: state => ({ ...state, field: 3 }),
       }),
     });
     const ducks = createDucks([model1, model2]);
     expect(ducks).toBeDefined();
-  });
-
-  it('should throw error if name of dependency is typoed in actions', () => {
-    expect(() => {
-      createModel({
-        name: 'test1',
-        inject: ['test2'],
-        state: {
-          field: 1,
-        },
-        actions: ({ deps }) => ({
-          [deps.test3.types.doSomething]: state => ({ ...state, field: 2 }),
-        }),
-      });
-    }).toThrowError(/could not create action types/i);
   });
 
   it('should throw error if incorrect dependency name is injected', () => {
