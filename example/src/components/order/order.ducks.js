@@ -1,45 +1,38 @@
 import { takeEvery, put } from 'redux-saga/effects';
 import { createModel } from 'reducktion'; // eslint-disable-line
 
-const model = createModel(
-  'order',
-  ['FETCH_ORDERS', 'RECEIVE_ORDERS', 'FETCH_ORDERS_FAILED'],
-  {
+const model = createModel({
+  name: 'order',
+  inject: ['user'],
+  state: {
     orders: [],
     isLoading: false,
     hasError: false,
-  }
-)
-  .inject('user')
-  .reducer(({ types, user }) => ({
-    [types.FETCH_ORDERS]: state => ({ ...state, isLoading: true }),
-    [types.FETCH_ORDERS_FAILED]: state => ({
+  },
+  actions: ({ deps }) => ({
+    fetchOrders: state => ({ ...state, isLoading: true }),
+    failFetchOrders: state => ({
       ...state,
       isLoading: false,
       hasError: true,
     }),
-    [types.RECEIVE_ORDERS]: (state, action) => ({
+    receiveOrders: (state, action) => ({
       ...state,
       isLoading: false,
       hasError: false,
       orders: action.payload,
     }),
-    [user.types.LOGIN]: state => ({ ...state, isLoading: true }),
-  }))
-  .actions(({ types }) => ({
-    fetchOrders: types.FETCH_ORDERS,
-    failFetchOrders: types.FETCH_ORDERS_FAILED,
-    setOrders: types.RECEIVE_ORDERS,
-  }))
-  .selectors(({ name }) => ({
+    [deps.user.types.LOGIN]: state => ({ ...state, isLoading: true }),
+  }),
+  selectors: ({ name }) => ({
     getCustomSelector: state => [...state[name].orders, 'lol'],
     getOrders: state => state[name].orders,
-  }))
-  .sagas(({ types, user }) => [
-    takeEvery([types.FETCH_ORDERS], fetchOrdersSaga),
-    takeEvery([user.types.LOGIN], reactToLoginSaga, { user }),
-  ])
-  .create();
+  }),
+  sagas: ({ types, deps }) => [
+    takeEvery([types.fetchOrders], fetchOrdersSaga),
+    takeEvery([deps.user.types.login], reactToLoginSaga, { user: deps.user }),
+  ],
+});
 
 // Sagas ---------------------------------------------------------------------
 
