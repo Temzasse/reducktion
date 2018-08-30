@@ -20,3 +20,13 @@ export const validateInject = injected => {
     throw Error('Injected dependency names should be strings');
   }
 };
+
+export const validateModel = ({ name, state, inject, actions, reactions }) => {
+  if (!name) throw Error('Model should have a name');
+
+  if (state && !actions && !reactions) {
+    throw Error('Model with state should have reducers');
+  }
+
+  if (inject) validateInject(inject);
+};
