@@ -140,7 +140,7 @@ import { createStore, combineReducers } from 'redux';
 import { initDucks } from 'reducktion';
 import orderDuck from '../order/order.duck';
 
-const ducks = initDucks([orderDuck, /* other ducks... */]);
+const ducks = initDucks([orderDuck /* other ducks... */]);
 const rootReducer = combineReducers(ducks.allReducers);
 const store = createStore(rootReducer, initialState);
 ```
@@ -460,7 +460,6 @@ function archiveOrders(args, deps) {
     dispatch(deps.user.actions.logout()); // ¯\_(ツ)_/¯
   };
 }
-
 
 // Saga handlers
 function* fetchOrdersSaga() {
