@@ -6,8 +6,11 @@ const model = createModel({
   state: {
     notificationsEnabled: false,
     gpsEnabled: false,
-    selectedTheme: 'light',
+    darkModeEnabled: false,
   },
+  selectors: ({ name }) => ({
+    getThemeMode: state => (state[name].darkModeEnabled ? 'dark' : 'light'),
+  }),
   actions: ({ initialState }) => ({
     resetSettings: () => ({ ...initialState }),
     toggleNotifications: state => ({
@@ -18,9 +21,9 @@ const model = createModel({
       ...state,
       gpsEnabled: !state.gpsEnabled,
     }),
-    updateTheme: (state, action) => ({
+    toggleDarkMode: state => ({
       ...state,
-      theme: action.payload || 'light',
+      darkModeEnabled: !state.darkModeEnabled,
     }),
     testThunk,
   }),

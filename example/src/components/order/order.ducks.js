@@ -30,10 +30,7 @@ const model = createModel({
     getCustomSelector: state => [...state[name].orders, 'lol'],
     getOrders: state => state[name].orders,
   }),
-  sagas: ({ types, deps }) => [
-    takeEvery([types.fetchOrders], fetchOrdersSaga),
-    takeEvery([deps.user.types.login], reactToLoginSaga, { user: deps.user }),
-  ],
+  sagas: ({ types }) => [takeEvery([types.fetchOrders], fetchOrdersSaga)],
 });
 
 // Sagas ---------------------------------------------------------------------
@@ -60,12 +57,6 @@ function* fetchOrdersSaga() {
     ])
   );
   */
-}
-
-function* reactToLoginSaga({ user }, action) {
-  console.log('> react to login', user, action);
-  yield put(model.actions.fetchOrders());
-  yield put(user.actions.setProfile());
 }
 
 export default model;
