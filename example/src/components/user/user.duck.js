@@ -2,7 +2,7 @@ import { takeLatest, put } from 'redux-saga/effects';
 import { createDuck } from 'reducktion'; // eslint-disable-line
 import { sleep } from '../../helpers';
 
-const model = createDuck({
+const duck = createDuck({
   name: 'user',
   inject: ['order'],
   state: {
@@ -26,25 +26,24 @@ const model = createDuck({
   selectors: ({ name }) => ({
     getProfile: state => state[name].profile, // Custom selector just for fun
   }),
-  sagas: ({ types, deps }) => [takeLatest([types.login], loginSaga, deps)],
+  sagas: ({ types }) => [takeLatest([types.login], loginSaga)],
 });
 
-function* loginSaga(deps, { payload }) {
+// Saga handlers
+function* loginSaga({ payload }) {
   if (!payload.username || !payload.password) {
-    yield put(model.actions.loginFailed());
+    yield put(duck.actions.loginFailed());
   } else {
     // Fake API call delay
     yield sleep(600);
     yield put(
-      model.actions.loginSuccess({
+      duck.actions.loginSuccess({
         name: 'Teemu Taskula',
         avatarUrl: 'https://source.unsplash.com/random/100x100',
         githubUrl: 'https://github.com/Temzasse',
       })
     );
-    // Use deps to fetch orders after successful auth
-    yield put(deps.order.actions.fetchOrders());
   }
 }
 
-export default model;
+export default duck;

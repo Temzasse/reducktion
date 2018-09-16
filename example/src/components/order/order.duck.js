@@ -1,7 +1,8 @@
 import { takeEvery, put } from 'redux-saga/effects';
 import { createDuck } from 'reducktion'; // eslint-disable-line
+import { sleep } from '../../helpers';
 
-const model = createDuck({
+const duck = createDuck({
   name: 'order',
   inject: ['user'],
   state: {
@@ -30,16 +31,18 @@ const model = createDuck({
     getCustomSelector: state => [...state[name].orders, 'lol'],
     getOrders: state => state[name].orders,
   }),
-  sagas: ({ types }) => [takeEvery([types.fetchOrders], fetchOrdersSaga)],
+  sagas: ({ types, deps }) => [
+    takeEvery([types.fetchOrders], fetchOrdersSaga),
+    takeEvery([deps.user.types.loginSuccess], fetchOrdersSaga),
+  ],
 });
 
-// Sagas ---------------------------------------------------------------------
-
+// Saga handlers
 function* fetchOrdersSaga() {
-  console.log('> fetch orders');
-
+  // Fake API call delay
+  yield sleep(400);
   yield put(
-    model.actions.receiveOrders([
+    duck.actions.receiveOrders([
       { id: 1, name: 'Mock order 1' },
       { id: 2, name: 'Mock order 2' },
       { id: 3, name: 'Mock order 3' },
@@ -49,7 +52,7 @@ function* fetchOrdersSaga() {
 
   /* Or use manually defined actions that does the same thing as `receiveOrders`
   yield put(
-    model.actions.setOrders([
+    duck.actions.setOrders([
       { id: 1, name: 'Mock order 1' },
       { id: 2, name: 'Mock order 2' },
       { id: 3, name: 'Mock order 3' },
@@ -59,4 +62,4 @@ function* fetchOrdersSaga() {
   */
 }
 
-export default model;
+export default duck;
