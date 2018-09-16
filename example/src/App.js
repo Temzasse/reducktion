@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import styled, { ThemeProvider } from 'styled-components';
 
 import { themed, colors } from './theme';
-import settingsDucks from './components/settings/settings.ducks';
+import settingsDucks from './components/settings/settings.duck';
 import SettingsExample from './components/settings';
 import OrderExample from './components/order';
 import UserExample from './components/user';

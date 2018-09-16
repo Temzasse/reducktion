@@ -1,8 +1,8 @@
 import { takeLatest, put } from 'redux-saga/effects';
-import { createModel } from 'reducktion'; // eslint-disable-line
+import { createDuck } from 'reducktion'; // eslint-disable-line
 import { sleep } from '../../helpers';
 
-const model = createModel({
+const model = createDuck({
   name: 'user',
   inject: ['order'],
   state: {

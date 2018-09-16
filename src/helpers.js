@@ -21,11 +21,11 @@ export const validateInject = injected => {
   }
 };
 
-export const validateModel = ({ name, state, inject, actions, reactions }) => {
-  if (!name) throw Error('Model should have a name');
+export const validateDuck = ({ name, state, inject, actions, reactions }) => {
+  if (!name) throw Error('Duck should have a name');
 
   if (state && !actions && !reactions) {
-    throw Error('Model with state should have reducers');
+    throw Error('Duck with state should have reducers');
   }
 
   if (inject) validateInject(inject);

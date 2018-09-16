@@ -24,26 +24,30 @@ class LoginForm extends Component {
 
   render() {
     const { error, loading } = this.props;
+    const { username, password } = this.state;
 
     return (
       <Form onSubmit={this.handleSubmit} autocomplete="off">
         <h1>User example</h1>
+
         <Input
           name="username"
-          value={this.state.username}
+          value={username}
           placeholder="Username"
           onChange={this.handleChange}
         />
         <Input
           name="password"
           type="password"
-          value={this.state.password}
+          value={password}
           placeholder="Password"
           onChange={this.handleChange}
         />
+
         <SubmitButton disabled={loading}>
           {loading ? 'Logging in...' : 'Login'}
         </SubmitButton>
+
         {error && <Error>Login failed, check username or password.</Error>}
       </Form>
     );

@@ -1,6 +1,6 @@
 # API documentation
 
-## `createModel(name, types, initialState)`
+## `createDuck(name, types, initialState)`
 
 | Arg              | Type       |
 |------------------|------------|
@@ -130,6 +130,6 @@ Returns:
 }
 ```
 
-## `createDucks`
+## `initDucks`
 
 TODO.

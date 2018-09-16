@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
 import { themed, colors } from '../../theme';
-import settingsDucks from './settings.ducks';
+import settingsDuck from './settings.duck';
 
 class Settings extends Component {
   static propTypes = {
@@ -17,32 +17,35 @@ class Settings extends Component {
   };
 
   render() {
+    const {
+      gpsEnabled,
+      darkModeEnabled,
+      notificationsEnabled,
+      toggleNotifications,
+      toggleGps,
+      toggleDarkMode,
+    } = this.props;
+
     return (
       <Container>
         <h1>Settings example</h1>
         <Options>
           <Label>
             Dark mode on
-            <Checkbox
-              checked={this.props.darkModeEnabled}
-              onChange={this.props.toggleDarkMode}
-            />
+            <Checkbox checked={darkModeEnabled} onChange={toggleDarkMode} />
           </Label>
 
           <Label>
             Notifications enabled
             <Checkbox
-              checked={this.props.notificationsEnabled}
-              onChange={this.props.toggleNotifications}
+              checked={notificationsEnabled}
+              onChange={toggleNotifications}
             />
           </Label>
 
           <Label>
             GPS enabled
-            <Checkbox
-              checked={this.props.gpsEnabled}
-              onChange={this.props.toggleGps}
-            />
+            <Checkbox checked={gpsEnabled} onChange={toggleGps} />
           </Label>
         </Options>
       </Container>
@@ -85,15 +88,14 @@ const Checkbox = styled.input.attrs({ type: 'checkbox' })`
 
 export default connect(
   state => ({
-    gpsEnabled: settingsDucks.selectors.getGpsEnabled(state),
-    darkModeEnabled: settingsDucks.selectors.getDarkModeEnabled(state),
-    notificationsEnabled: settingsDucks.selectors.getNotificationsEnabled(
-      state
-    ),
+    gpsEnabled: settingsDuck.selectors.getGpsEnabled(state),
+    // OR: gpsEnabled: settingsDuck.selectors.get('gpsEnabled', state),
+    darkModeEnabled: settingsDuck.selectors.getDarkModeEnabled(state),
+    notificationsEnabled: settingsDuck.selectors.getNotificationsEnabled(state),
   }),
   {
-    toggleNotifications: settingsDucks.actions.toggleNotifications,
-    toggleGps: settingsDucks.actions.toggleGps,
-    toggleDarkMode: settingsDucks.actions.toggleDarkMode,
+    toggleNotifications: settingsDuck.actions.toggleNotifications,
+    toggleGps: settingsDuck.actions.toggleGps,
+    toggleDarkMode: settingsDuck.actions.toggleDarkMode,
   }
 )(Settings);
