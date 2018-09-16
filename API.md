@@ -1,122 +1,19 @@
 # API documentation
 
-## `createDuck(name, types, initialState)`
+TODO: finish and make clearer!
 
-| Arg              | Type       |
-|------------------|------------|
-| **name**         | `String`   |
-| **types**        | `String[]` |
-| **initialState** | `any`      |
+## `createDuck(duckDefinition: Object)`
 
-Returns: duck model definition functions:
+| Fields        | Type       |
+| ------------- | ---------- |
+| **name**      | `String`   |
+| **inject**    | `String[]` |
+| **state**     | `Object`   |
+| **actions**   | `Function` |
+| **reactions** | `Function` |
+| **sagas**     | `Function` |
 
-```
-{
-  actions: Function,
-  reducer: Function,
-  selectors: Function,
-  sagas: Function,
-  inject: Function,
-  create: Function,
-}
-```
-
-### `actions(fn)`
-
-| Arg              | Type       | Description                      | Returns                              |
-|------------------|------------|----------------------------------|--------------------------------------|
-| **fn**           | `Function` | **fn** receives model's `types`. | actions: `Object.<String, Function>` |
-
-NOTE: by default actions will be created automatically based on the model types!
-
-Returns: duck model definition functions.
-
-Example:
-
-```js
-.actions(({ types }) => {
-  fetchOrders: types.FETCH_ORDERS,
-})
-```
-
-If you provide a thunk function it will also receive the injected dependencies, see example [here](README.md#usage-with-redux-thunk).
-
-### `reducer(fn)`
-
-| Arg              | Type       | Description                                                                     | Returns                              |
-|------------------|------------|---------------------------------------------------------------------------------|--------------------------------------|
-| **fn**           | `Function` | **fn** receives model's `types`, `initialState`, and all injected dependencies. | reducer: `Object.<String, Function>` |
-
-Returns: duck model definition functions.
-
-Example:
-
-```js
-.reducer(({ types, user, initialState }) => ({
-  [types.FETCH_ORDERS]: state => ({
-    ...state,
-    isLoading: true,
-  }),
-  [types.RECEIVE_ORDERS]: (state, action) => ({
-    ...state,
-    isLoading: false,
-    hasError: false,
-    orders: action.payload,
-  }),
-  [user.types.LOGOUT]: () => ({ ...initialState }),
-}))
-```
-
-### `selectors(fn)`
-
-| Arg              | Type       | Description                      | Returns                                |
-|------------------|------------|----------------------------------|----------------------------------------|
-| **fn**           | `Function` | **fn** receives model's `name`.  | selectors: `Object.<String, Function>` |
-
-NOTE: by default selectors will be created automatically based on the initial state field names!
-
-Returns: duck model definition functions.
-
-Example:
-
-```js
-.selectors(({ name }) => ({
-  getOrders: state => state[name].orders,
-}))
-```
-
-Returns: duck model definition functions.
-
-### `sagas(fn)`
-
-| Arg              | Type       | Description                                                    | Returns                   |
-|------------------|------------|----------------------------------------------------------------|---------------------------|
-| **fn**           | `Function` | **fn** receives model's `types` and all injected dependencies. | sagas: `Array.<Function>` |
-
-Returns: duck model definition functions.
-
-Example:
-
-```js
-.sagas(({ types, user }) => [
-  takeEvery([types.FETCH_ORDERS], fetchOrdersSaga),
-  takeEvery([user.types.LOGIN], reactToLoginSaga, { user }),
-])
-```
-
-See more detailed example [here](README.md#usage-with-redux-saga).
-
-### `inject(...names)`
-
-| Arg                                  | Type        | Description                          |
-|--------------------------------------|-------------|--------------------------------------|
-| **name1**, **name2**, **name3**, ... | `...String` | Model names that should be injected. |
-
-Returns: duck model definition functions.
-
-### `create()`
-
-Returns:
+Returns: Duck.
 
 ```
 {
@@ -130,6 +27,71 @@ Returns:
 }
 ```
 
-## `initDucks`
+### `actions: fn`
+
+| Value  | Type       | Description                     |
+| ------ | ---------- | ------------------------------- |
+| **fn** | `Function` | **fn** receives `initialState`. |
+
+Returns: actions / thunks that describe how state should be updated or `undefined` if state should not be updated.
+
+Example:
+
+```js
+actions: ({ initialState }) => ({
+  reset: state => ({ ...initialState }),
+  fetchOrders: state => ({ ...state, updatedField: 'abc' }),
+  // Actions that don't mutate state can be still listened in sagas / reactions
+  someAction: undefined,
+  someThunk,
+});
+```
+
+Thunks it will also receive the injected dependencies, see example [here](README.md#usage-with-redux-thunk).
+
+### `selectors: fn`
+
+| Value  | Type       | Description             |
+| ------ | ---------- | ----------------------- |
+| **fn** | `Function` | **fn** receives `name`. |
+
+NOTE: by default selectors will be created automatically based on the initial state field names!
+
+Returns: selector functions for the duck plus automatically included `get` helper selector.
+
+Example:
+
+```js
+selectors: ({ name }) => ({
+  getOrders: state => state[name].orders,
+});
+```
+
+### `sagas: fn`
+
+| Value  | Type       | Description                                                    |
+| ------ | ---------- | -------------------------------------------------------------- |
+| **fn** | `Function` | **fn** receives model's `types` and all injected dependencies. |
+
+Returns: array of saga watchers.
+
+Example:
+
+```js
+sagas: ({ types, deps }) => [
+  takeEvery([types.fetchOrders], fetchOrdersSaga),
+  takeEvery([deps.user.types.login], reactToLoginSaga, deps),
+];
+```
+
+See more detailed example [here](README.md#usage-with-redux-saga).
+
+### `inject: String[]`
+
+| Value                                         | Type       | Description                                  |
+| --------------------------------------------- | ---------- | -------------------------------------------- |
+| Array of duck names **name1**, **name2**, ... | `String[]` | Array of duck names that should be injected. |
+
+## `initDucks(Duck[])`
 
 TODO.
