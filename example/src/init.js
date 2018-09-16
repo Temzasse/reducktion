@@ -3,14 +3,14 @@ import { all } from 'redux-saga/effects';
 import createSagaMiddleware from 'redux-saga';
 import logger from 'redux-logger';
 import thunk from 'redux-thunk';
-import { createDucks } from 'reducktion'; // eslint-disable-line
+import { initDucks } from 'reducktion'; // eslint-disable-line
 
-import userDucks from './components/user/user.ducks';
-import orderDucks from './components/order/order.ducks';
-import settingsDucks from './components/settings/settings.ducks';
+import userDucks from './components/user/user.duck';
+import orderDucks from './components/order/order.duck';
+import settingsDucks from './components/settings/settings.duck';
 
 /*
-const { user, order, settings } = createDucks([
+const { user, order, settings } = initDucks([
   userDucks,
   orderDucks,
   settingsDucks,
@@ -23,7 +23,7 @@ const rootReducer = combineReducers({
 });
 */
 
-const ducks = createDucks([userDucks, orderDucks, settingsDucks]);
+const ducks = initDucks([userDucks, orderDucks, settingsDucks]);
 
 const rootReducer = combineReducers(ducks.allReducers);
 

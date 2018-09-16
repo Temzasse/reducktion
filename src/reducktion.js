@@ -1,11 +1,6 @@
 // @ts-check
 import { createAction, handleActions } from 'redux-actions';
-import {
-  capitalize,
-  isFunction,
-  validateInject,
-  validateModel,
-} from './helpers';
+import { capitalize, isFunction, validateDuck } from './helpers';
 
 // JSDoc typedefs
 // TODO: maybe use TypeScript or Flow?
@@ -47,33 +42,33 @@ import {
  */
 
 /**
- * Creates a ducks model and returns chainable functions to define futher props.
- * @param {string} modelName
+ * Creates a ducks duck and returns chainable functions to define futher props.
+ * @param {string} duckName
  * @param {string[]} typeList
- * @param {Object.<string, any>} model
+ * @param {Object.<string, any>} duck
  * @returns {Duck}
  */
-export const createModel = model => {
-  validateModel(model);
+export const createDuck = duck => {
+  validateDuck(duck);
 
   const dependencies = {};
-  let { sagas } = model;
+  let { sagas } = duck;
   let types = {};
   let reducer;
 
   // Mark injected deps to be filled later
-  if (model.inject) {
-    model.inject.forEach(depName => {
+  if (duck.inject) {
+    duck.inject.forEach(depName => {
       dependencies[depName] = null;
     });
   }
 
   // Create types from actions
-  if (model.actions) {
+  if (duck.actions) {
     // Execute actions func once with fake self to get the keys used for types
     const fakeSelf = { initialState: {} };
-    types = Object.keys(model.actions(fakeSelf)).reduce((acc, actionName) => {
-      acc[actionName] = `${model.name}/${actionName}`;
+    types = Object.keys(duck.actions(fakeSelf)).reduce((acc, actionName) => {
+      acc[actionName] = `${duck.name}/${actionName}`;
       return acc;
     }, {});
   }
@@ -95,16 +90,30 @@ export const createModel = model => {
   }, {});
 
   // Auto-generate initial selectors for each state field
-  let selectors = Object.keys(model.state).reduce((acc, key) => {
-    acc[`get${capitalize(key)}`] = state => state[model.name][key];
+  let selectors = Object.keys(duck.state).reduce((acc, key) => {
+    acc[`get${capitalize(key)}`] = state => state[duck.name][key];
     return acc;
   }, {});
 
   // Add selectors defined by user
-  if (model.selectors) {
-    const customSelectors = model.selectors({ name: model.name }) || {};
+  if (duck.selectors) {
+    const customSelectors = duck.selectors({ name: duck.name }) || {};
     selectors = { ...selectors, ...customSelectors };
   }
+
+  // Add simple `get` for selecting state fields by name
+  const getSelector = (key, state) => {
+    const statePart = state[duck.name];
+    // TODO: is this validation necessary?
+    if (!Object.prototype.hasOwnProperty.call(statePart, key)) {
+      throw Error(
+        `You tried to select a non-existent field '${key}' from state`
+      );
+    }
+    return statePart[key];
+  };
+
+  selectors = { ...selectors, get: getSelector };
 
   /**
    * Fills in the dependencies that were requested when calling inject.
@@ -121,7 +130,7 @@ export const createModel = model => {
         };
       } else {
         throw Error(
-          `There is no dependendy called '${dep}' for ${model.name} model.` // eslint-disable-line
+          `There is no dependendy called '${dep}' for ${duck.name} duck.` // eslint-disable-line
         );
       }
     });
@@ -134,27 +143,27 @@ export const createModel = model => {
     let reducerObj = {};
 
     // Run duck actions function to get reducer
-    if (model.actions) {
-      const own = model.actions({ initialState: model.state }) || {};
+    if (duck.actions) {
+      const own = duck.actions({ initialState: duck.state }) || {};
       // Modify reducer obj keys to match with types
       const ownCorrect = Object.entries(own).reduce((acc, [key, val]) => {
-        acc[`${model.name}/${key}`] = val;
+        acc[`${duck.name}/${key}`] = val;
         return acc;
       }, {});
       reducerObj = { ...reducerObj, ...ownCorrect };
     }
 
     // Run duck reactions function to get rest of the reducer
-    if (model.reactions) {
+    if (duck.reactions) {
       const fromDeps =
-        model.reactions({
-          initialState: model.state,
+        duck.reactions({
+          initialState: duck.state,
           deps: dependencies,
         }) || {};
       reducerObj = { ...reducerObj, ...fromDeps };
     }
 
-    reducer = handleActions(reducerObj, model.state);
+    reducer = handleActions(reducerObj, duck.state);
 
     if (sagas) {
       sagas = sagas({ types, deps: dependencies });
@@ -174,8 +183,8 @@ export const createModel = model => {
   const getSagas = () => sagas || [];
 
   return {
-    name: model.name,
-    initialState: model.state,
+    name: duck.name,
+    initialState: duck.state,
     types,
     actions,
     selectors,
@@ -191,7 +200,7 @@ export const createModel = model => {
  * @param {Duck[]} ducks
  * @returns {Object.<string, Duck>}
  */
-export const createDucks = (ducks = []) => {
+export const initDucks = (ducks = []) => {
   const ducksByName = ducks.reduce((acc, val) => {
     acc[val.name] = val;
     return acc;

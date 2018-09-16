@@ -1,17 +1,24 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
-import orderDucks from './order.ducks';
-import settingsDucks from '../settings/settings.ducks';
+import PropTypes from 'prop-types';
+
+import orderDucks from './order.duck';
+import settingsDuck from '../settings/settings.duck';
 
 class Order extends Component {
+  static propTypes = {
+    orders: PropTypes.array.isRequired,
+    fetchOrders: PropTypes.func.isRequired,
+  };
+
   render() {
-    const { orders } = this.props;
+    const { orders, fetchOrders } = this.props;
 
     return (
       <Container>
         <h1>Order example</h1>
-        <button onClick={this.props.fetchOrders}>Fetch orders</button>
+        <button onClick={fetchOrders}>Fetch orders</button>
 
         {orders.length > 0 && (
           <Orders>
@@ -36,10 +43,11 @@ const Orders = styled.ul`
 
 export default connect(
   state => ({
-    orders: orderDucks.selectors.getOrders(state),
+    // orders: orderDucks.selectors.getOrders(state),
+    orders: orderDucks.selectors.get('orders', state),
   }),
   {
-    testThunk: settingsDucks.actions.testThunk,
+    testThunk: settingsDuck.actions.testThunk,
     fetchOrders: orderDucks.actions.fetchOrders,
   }
 )(Order);

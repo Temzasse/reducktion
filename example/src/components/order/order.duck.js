@@ -1,7 +1,7 @@
 import { takeEvery, put } from 'redux-saga/effects';
-import { createModel } from 'reducktion'; // eslint-disable-line
+import { createDuck } from 'reducktion'; // eslint-disable-line
 
-const model = createModel({
+const model = createDuck({
   name: 'order',
   inject: ['user'],
   state: {

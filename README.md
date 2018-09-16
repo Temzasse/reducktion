@@ -65,9 +65,9 @@ in a more modular way while providing some additional utilities such as [depende
 ```javascript
 // order.ducks.js
 
-import { createModel } from 'reducktion';
+import { createDuck } from 'reducktion';
 
-const model = createModel(
+const model = createDuck(
   // model name
   'order',
 
@@ -115,9 +115,9 @@ So, the non-auto-generatad version of the above example would look like this:
 ```javascript
 // order.ducks.js
 
-import { createModel } from 'reducktion';
+import { createDuck } from 'reducktion';
 
-const model = createModel(
+const model = createDuck(
   'order',
   ['FETCH_ORDERS', 'RECEIVE_ORDERS', 'FETCH_ORDERS_FAILED'],
   {
@@ -152,10 +152,10 @@ Finally in the place where you combine your reducers and create the store:
 
 ```javascript
 import { createStore, combineReducers } from 'redux';
-import { createDucks } from 'reducktion';
+import { initDucks } from 'reducktion';
 import orderDucks from '../order/order.ducks';
 
-const ducks = createDucks([orderDucks /* other ducks... */]);
+const ducks = initDucks([orderDucks /* other ducks... */]);
 const rootReducer = combineReducers(ducks.allReducers);
 const store = createStore(rootReducer, initialState);
 ```
@@ -216,9 +216,9 @@ You can give any number of model names to `inject` and they will be provided to 
 In the below example we clear the orders in the state when the user logs out:
 
 ```javascript
-import { createModel } from 'reducktion';
+import { createDuck } from 'reducktion';
 
-const model = createModel(
+const model = createDuck(
   'order',
   ['FETCH_ORDERS', 'RECEIVE_ORDERS', 'FETCH_ORDERS_FAILED'],
   {
@@ -252,9 +252,9 @@ export default model;
 Using [redux-thunk](https://github.com/reduxjs/redux-thunk) is fairly simple: you only need to provide the thunk functions alongside with the other action creators.
 
 ```javascript
-import { createModel } from 'reducktion';
+import { createDuck } from 'reducktion';
 
-const model = createModel(
+const model = createDuck(
   'settings',
   ['TOGGLE_NOTIFICATIONS', 'TOGGLE_GPS', 'UPDATE_THEME', 'RESET_SETTINGS'],
   {
@@ -319,10 +319,10 @@ So, you need to install redux-saga yourself and import all the helpers you need 
 Basically the `.sagas` method just provides you the necessary things (own types and dependencies) you need to bootstrap your sagas.
 
 ```javascript
-import { createModel } from 'reducktion';
+import { createDuck } from 'reducktion';
 import { takeEvery, takeLatest, put, call } from 'redux-saga/effects';
 
-const model = createModel(
+const model = createDuck(
   'order',
   ['FETCH_ORDERS', 'RECEIVE_ORDERS', 'FETCH_ORDERS_FAILED', 'OTHER'],
   {
@@ -379,12 +379,12 @@ Finally, you need to create the ducks, combine your sagas, and run the root saga
 import { createStore, applyMiddleware, combineReducers } from 'redux';
 import { all } from 'redux-saga/effects';
 import createSagaMiddleware from 'redux-saga';
-import { createDucks } from 'reducktion';
+import { initDucks } from 'reducktion';
 
 import userDucks from '../user/user.ducks';
 import orderDucks from '../order/order.ducks';
 
-const ducks = createDucks([userDucks, orderDucks]);
+const ducks = initDucks([userDucks, orderDucks]);
 const rootReducer = combineReducers(ducks.allReducers);
 
 // Start all sagas
@@ -395,7 +395,7 @@ function* rootSaga() {
 /*
 A more manual way to do the same:
 
-const { user, order } = createDucks([userDucks, orderDucks]);
+const { user, order } = initDucks([userDucks, orderDucks]);
 
 const rootReducer = combineReducers({
   [user.name]: user.getReducer(),
@@ -420,10 +420,10 @@ sagaMiddleware.run(rootSaga);
 Let's cram all the goodness into a single duck model so you can see everything in one place 😎
 
 ```javascript
-import { createModel } from 'reducktion';
+import { createDuck } from 'reducktion';
 import { takeEvery, takeLatest, put, call } from 'redux-saga/effects';
 
-const model = createModel(
+const model = createDuck(
   'order',
   ['FETCH_ORDERS', 'RECEIVE_ORDERS', 'FETCH_ORDERS_FAILED'],
   {

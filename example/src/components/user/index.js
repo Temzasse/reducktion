@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import userDucks from './user.ducks';
+import userDuck from './user.duck';
 import LoginForm from './LoginForm';
 import Profile from './Profile';
 
@@ -22,7 +22,14 @@ class User extends Component {
   };
 
   render() {
-    const { error, loading, profile, isAuthenticated, login } = this.props;
+    const {
+      error,
+      loading,
+      profile,
+      isAuthenticated,
+      login,
+      logout,
+    } = this.props;
 
     return (
       <Container>
@@ -32,7 +39,7 @@ class User extends Component {
           <Fragment>
             <Profile profile={profile} />
             <LogoutWrapper>
-              <LogoutButton onClick={this.props.logout}>Logout</LogoutButton>
+              <LogoutButton onClick={logout}>Logout</LogoutButton>
             </LogoutWrapper>
           </Fragment>
         )}
@@ -62,13 +69,13 @@ const LogoutButton = styled.button`
 
 export default connect(
   state => ({
-    isAuthenticated: userDucks.selectors.getIsAuthenticated(state),
-    profile: userDucks.selectors.getProfile(state),
-    loading: userDucks.selectors.getLoading(state),
-    error: userDucks.selectors.getError(state),
+    isAuthenticated: userDuck.selectors.getIsAuthenticated(state),
+    profile: userDuck.selectors.getProfile(state),
+    loading: userDuck.selectors.getLoading(state),
+    error: userDuck.selectors.getError(state),
   }),
   {
-    login: userDucks.actions.login,
-    logout: userDucks.actions.logout,
+    login: userDuck.actions.login,
+    logout: userDuck.actions.logout,
   }
 )(User);
