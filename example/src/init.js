@@ -9,7 +9,12 @@ import userDucks from './components/user/user.duck';
 import orderDucks from './components/order/order.duck';
 import settingsDucks from './components/settings/settings.duck';
 
+const ducks = initDucks([userDucks, orderDucks, settingsDucks]);
+const rootReducer = combineReducers(ducks.allReducers);
+
 /*
+Or in a more manual way:
+
 const { user, order, settings } = initDucks([
   userDucks,
   orderDucks,
@@ -22,10 +27,6 @@ const rootReducer = combineReducers({
   [settings.name]: settings.getReducer(),
 });
 */
-
-const ducks = initDucks([userDucks, orderDucks, settingsDucks]);
-
-const rootReducer = combineReducers(ducks.allReducers);
 
 // Start all sagas
 function* rootSaga() {

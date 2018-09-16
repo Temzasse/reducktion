@@ -1,6 +1,6 @@
 import { createDuck } from 'reducktion'; // eslint-disable-line
 
-const model = createDuck({
+const duck = createDuck({
   name: 'settings',
   inject: ['user', 'order'],
   state: {
@@ -32,11 +32,10 @@ const model = createDuck({
 // Thunks
 function testThunk(arg, { user, order }) {
   return async dispatch => {
-    console.log('> settings thunk');
-    dispatch(model.actions.updateTheme('dark'));
+    dispatch(duck.actions.updateTheme('dark'));
     dispatch(order.actions.setOrders());
     dispatch(user.actions.setProfile());
   };
 }
 
-export default model;
+export default duck;
