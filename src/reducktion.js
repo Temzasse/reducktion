@@ -1,6 +1,13 @@
 // @ts-check
 import { createAction, handleActions } from 'redux-actions';
-import { capitalize, isFunction, validateDuck } from './helpers';
+import {
+  createSelectors,
+  validateDuck,
+  handleApiAction,
+  handleThunks,
+  isApiAction,
+  API_ACTION_IDENTIFIER,
+} from './helpers';
 
 // JSDoc typedefs
 // TODO: maybe use TypeScript or Flow?
@@ -51,10 +58,13 @@ import { capitalize, isFunction, validateDuck } from './helpers';
 export const createDuck = duck => {
   validateDuck(duck);
 
+  const initialState = { ...duck.state };
   const dependencies = {};
-  let { sagas } = duck;
-  let types = {};
+  const types = {};
+  let reducerHandlers = {};
+  let actions = {};
   let reducer;
+  let sagas = [];
 
   // Mark injected deps to be filled later
   if (duck.inject) {
@@ -63,37 +73,37 @@ export const createDuck = duck => {
     });
   }
 
-  // Create types from actions
+  // Create types, actions and reducer handlers from `duck.actions`
   if (duck.actions) {
-    // Execute actions func once with fake self to get the keys used for types
-    const fakeSelf = { initialState: {} };
-    types = Object.keys(duck.actions(fakeSelf)).reduce((acc, actionName) => {
-      acc[actionName] = `${duck.name}/${actionName}`;
-      return acc;
-    }, {});
+    // We need to provide `initialState` since it might be used in reducers
+    Object.entries(duck.actions({ initialState })).forEach(
+      ([actionName, reducerHandler]) => {
+        // Register action type
+        const actionType = `${duck.name}/${actionName}`;
+        types[actionName] = actionType;
+
+        if (isApiAction(reducerHandler)) {
+          // Handle async API actions
+          const x = handleApiAction(reducerHandler.args, actionName, duck.name);
+          actions[actionName] = x.action;
+          reducerHandlers = { ...reducerHandlers, ...x.reducers };
+        } else {
+          // Create basic action
+          actions[actionName] = createAction(actionType);
+          reducerHandlers[actionType] = reducerHandler;
+        }
+      },
+      {}
+    );
   }
 
-  // Create actions from generate types
-  const actions = Object.entries(types).reduce((acc, [actionName, value]) => {
-    if (isFunction(value)) {
-      // Handle thunks
-      acc[actionName] = (...args) => value(...args, dependencies);
-    } else if (typeof value === 'string') {
-      // Just create a normal action
-      acc[actionName] = createAction(value);
-    } else {
-      throw Error(
-        `Unknown type for action ${actionName} - expected a string or function.`
-      );
-    }
-    return acc;
-  }, {});
+  // Handle thunks
+  if (duck.thunks) {
+    actions = { ...actions, ...handleThunks(duck.thunks, dependencies) };
+  }
 
   // Auto-generate initial selectors for each state field
-  let selectors = Object.keys(duck.state).reduce((acc, key) => {
-    acc[`get${capitalize(key)}`] = state => state[duck.name][key];
-    return acc;
-  }, {});
+  let selectors = createSelectors(duck);
 
   // Add selectors defined by user
   if (duck.selectors) {
@@ -104,12 +114,13 @@ export const createDuck = duck => {
   // Add simple `get` for selecting state fields by name
   const getSelector = (key, state) => {
     const statePart = state[duck.name];
-    // TODO: is this validation necessary?
+
     if (!Object.prototype.hasOwnProperty.call(statePart, key)) {
       throw Error(
         `You tried to select a non-existent field '${key}' from state`
       );
     }
+
     return statePart[key];
   };
 
@@ -140,33 +151,17 @@ export const createDuck = duck => {
    * Run reducer and sagas functions with the necessary data.
    */
   const _run = () => {
-    let reducerObj = {};
-
-    // Run duck actions function to get reducer
-    if (duck.actions) {
-      const own = duck.actions({ initialState: duck.state }) || {};
-      // Modify reducer obj keys to match with types
-      const ownCorrect = Object.entries(own).reduce((acc, [key, val]) => {
-        acc[`${duck.name}/${key}`] = val;
-        return acc;
-      }, {});
-      reducerObj = { ...reducerObj, ...ownCorrect };
-    }
-
     // Run duck reactions function to get rest of the reducer
     if (duck.reactions) {
       const fromDeps =
-        duck.reactions({
-          initialState: duck.state,
-          deps: dependencies,
-        }) || {};
-      reducerObj = { ...reducerObj, ...fromDeps };
+        duck.reactions({ initialState, deps: dependencies }) || {};
+      reducerHandlers = { ...reducerHandlers, ...fromDeps };
     }
 
-    reducer = handleActions(reducerObj, duck.state);
+    reducer = handleActions(reducerHandlers, initialState);
 
-    if (sagas) {
-      sagas = sagas({ types, deps: dependencies });
+    if (duck.sagas) {
+      sagas = duck.sagas({ types, deps: dependencies });
     }
   };
 
@@ -234,3 +229,8 @@ export const initDucks = (ducks = []) => {
     allSagas: getAllSagas(),
   };
 };
+
+export const createApiAction = args => ({
+  [API_ACTION_IDENTIFIER]: true,
+  args,
+});

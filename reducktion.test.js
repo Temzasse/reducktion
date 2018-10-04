@@ -1,4 +1,4 @@
-import { createDuck, initDucks } from './src/reducktion';
+import { createDuck, initDucks, createApiAction } from './src/reducktion';
 
 describe('createDuck', () => {
   it('should create a duck', () => {
@@ -135,6 +135,53 @@ describe('createDuck', () => {
           actions: () => ({ testAction: state => ({ ...state }) }),
         });
       }).toThrowError(/names should be strings/i);
+    });
+  });
+
+  describe('thunks', () => {
+    it('should accept thunks', () => {
+      const testThunk = () => {};
+      const duck = createDuck({
+        name: 'test',
+        state: { field: 1 },
+        actions: () => ({ testAction: state => ({ ...state }) }),
+        thunks: { testThunk },
+      });
+      expect(duck.actions.testThunk).toBeDefined();
+    });
+  });
+
+  describe('createApiAction', () => {
+    it('should create api actions', () => {
+      const duck = createDuck({
+        name: 'test',
+        state: {
+          orders: [],
+          isAuthenticated: true,
+          loading: false,
+          error: false,
+        },
+        actions: () => ({ testAction: createApiAction('orders') }),
+      });
+
+      expect(duck.actions.testAction).toBeDefined();
+      expect(duck.actions.testAction.success).toBeDefined();
+      expect(duck.actions.testAction.fail).toBeDefined();
+    });
+
+    it('should throw if api action has no success field', () => {
+      expect(() => {
+        createDuck({
+          name: 'test',
+          state: {
+            orders: [],
+            isAuthenticated: true,
+            loading: false,
+            error: false,
+          },
+          actions: () => ({ testAction: createApiAction() }),
+        });
+      }).toThrowError(/you must provide the name of the field/i);
     });
   });
 });
