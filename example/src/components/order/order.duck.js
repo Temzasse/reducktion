@@ -1,5 +1,5 @@
 import { takeEvery, put } from 'redux-saga/effects';
-import { createDuck } from 'reducktion'; // eslint-disable-line
+import { createDuck, createApiAction } from 'reducktion'; // eslint-disable-line
 import { sleep } from '../../helpers';
 
 const duck = createDuck({
@@ -7,21 +7,22 @@ const duck = createDuck({
   inject: ['user'],
   state: {
     orders: [],
-    isLoading: false,
+    packages: [],
+    error: undefined,
     hasError: false,
+    isLoading: false,
   },
   actions: () => ({
-    fetchOrders: state => ({ ...state, isLoading: true }),
-    failFetchOrders: state => ({
-      ...state,
-      isLoading: false,
-      hasError: true,
-    }),
-    receiveOrders: (state, action) => ({
-      ...state,
-      isLoading: false,
-      hasError: false,
-      orders: action.payload,
+    // Simple way to create API related action
+    fetchOrders: createApiAction('orders'),
+    // Provide custom success reducer handler
+    fetchPackages: createApiAction({
+      success: (state, action) => ({
+        ...state,
+        packages: action.payload,
+        hasError: null,
+        isLoading: false,
+      }),
     }),
   }),
   reactions: ({ deps }) => ({
@@ -39,27 +40,21 @@ const duck = createDuck({
 
 // Saga handlers
 function* fetchOrdersSaga() {
-  // Fake API call delay
-  yield sleep(400);
-  yield put(
-    duck.actions.receiveOrders([
-      { id: 1, name: 'Mock order 1' },
-      { id: 2, name: 'Mock order 2' },
-      { id: 3, name: 'Mock order 3' },
-      { id: 4, name: 'Mock order 4' },
-    ])
-  );
-
-  /* Or use manually defined actions that does the same thing as `receiveOrders`
-  yield put(
-    duck.actions.setOrders([
-      { id: 1, name: 'Mock order 1' },
-      { id: 2, name: 'Mock order 2' },
-      { id: 3, name: 'Mock order 3' },
-      { id: 4, name: 'Mock order 4' },
-    ])
-  );
-  */
+  try {
+    // Fake API call delay
+    yield sleep(400);
+    // this.props.fetchOrders()
+    yield put(
+      duck.actions.fetchOrders.success([
+        { id: 1, name: 'Mock order 1' },
+        { id: 2, name: 'Mock order 2' },
+        { id: 3, name: 'Mock order 3' },
+        { id: 4, name: 'Mock order 4' },
+      ])
+    );
+  } catch (error) {
+    yield put(duck.actions.fetchOrders.fail());
+  }
 }
 
 export default duck;

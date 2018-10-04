@@ -67,15 +67,19 @@ const LogoutButton = styled.button`
   width: 120px;
 `;
 
+// You can also destruct `selectors` and `actions` for brewity
+const { selectors, actions } = userDuck;
+
 export default connect(
   state => ({
-    isAuthenticated: userDuck.selectors.getIsAuthenticated(state),
-    profile: userDuck.selectors.getProfile(state),
-    loading: userDuck.selectors.getLoading(state),
-    error: userDuck.selectors.getError(state),
+    isAuthenticated: selectors.getIsAuthenticated(state),
+    // profile: selectors.getProfile(state),
+    profile: selectors.get('profile', state),
+    loading: selectors.getLoading(state),
+    error: selectors.getError(state),
   }),
   {
-    login: userDuck.actions.login,
-    logout: userDuck.actions.logout,
+    login: actions.login,
+    logout: actions.logout,
   }
 )(User);

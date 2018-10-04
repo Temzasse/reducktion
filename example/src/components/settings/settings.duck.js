@@ -25,16 +25,22 @@ const duck = createDuck({
       ...state,
       darkModeEnabled: !state.darkModeEnabled,
     }),
-    testThunk,
   }),
+  thunks: { testThunk },
 });
 
 // Thunks
-function testThunk(arg, { user, order }) {
+function testThunk(arg, { user }) {
   return async dispatch => {
-    dispatch(duck.actions.updateTheme('dark'));
-    dispatch(order.actions.setOrders());
-    dispatch(user.actions.setProfile());
+    dispatch(duck.actions.toggleGps());
+    dispatch(duck.actions.toggleDarkMode());
+    dispatch(
+      user.actions.setProfile({
+        name: 'New Profile',
+        avatarUrl: 'https://source.unsplash.com/random/200x200',
+        githubUrl: 'https://github.com/Temzasse',
+      })
+    );
   };
 }
 

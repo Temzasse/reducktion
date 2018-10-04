@@ -22,6 +22,7 @@ const duck = createDuck({
       loading: false,
       error: false,
     }),
+    setProfile: (state, action) => ({ ...state, profile: action.payload }),
   }),
   selectors: ({ name }) => ({
     getProfile: state => state[name].profile, // Custom selector just for fun

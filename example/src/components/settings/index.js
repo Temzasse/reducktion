@@ -14,6 +14,7 @@ class Settings extends Component {
     toggleNotifications: PropTypes.func.isRequired,
     toggleGps: PropTypes.func.isRequired,
     toggleDarkMode: PropTypes.func.isRequired,
+    testThunk: PropTypes.func.isRequired,
   };
 
   render() {
@@ -24,11 +25,15 @@ class Settings extends Component {
       toggleNotifications,
       toggleGps,
       toggleDarkMode,
+      testThunk,
     } = this.props;
 
     return (
       <Container>
         <h1>Settings example</h1>
+
+        <Button onClick={testThunk}>Test Thunk</Button>
+
         <Options>
           <Label>
             Dark mode on
@@ -86,6 +91,16 @@ const Checkbox = styled.input.attrs({ type: 'checkbox' })`
   margin-left: 16px;
 `;
 
+const Button = styled.button`
+  padding: 8px 12px;
+  border: none;
+  background-color: slategray;
+  color: #fff;
+  border-radius: 4px;
+  width: 200px;
+  margin-bottom: 32px;
+`;
+
 export default connect(
   state => ({
     gpsEnabled: settingsDuck.selectors.getGpsEnabled(state),
@@ -97,5 +112,6 @@ export default connect(
     toggleNotifications: settingsDuck.actions.toggleNotifications,
     toggleGps: settingsDuck.actions.toggleGps,
     toggleDarkMode: settingsDuck.actions.toggleDarkMode,
+    testThunk: settingsDuck.actions.testThunk,
   }
 )(Settings);
