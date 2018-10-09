@@ -167,6 +167,9 @@ describe('createDuck', () => {
       expect(duck.actions.testAction).toBeDefined();
       expect(duck.actions.testAction.success).toBeDefined();
       expect(duck.actions.testAction.fail).toBeDefined();
+      expect(duck.types.testAction.loading).toEqual('test/testAction');
+      expect(duck.types.testAction.success).toEqual('test/testAction/success');
+      expect(duck.types.testAction.failure).toEqual('test/testAction/failure');
     });
 
     it('should throw if api action has no success field', () => {
@@ -292,5 +295,42 @@ describe('initDucks', () => {
     expect(() => {
       initDucks([duck1, duck2]);
     }).toThrowError(/there is no dependendy called 'test3'/i);
+  });
+
+  it('should be able to use API action types in reactions', () => {
+    const duck1 = createDuck({
+      name: 'test1',
+      state: {
+        data: [],
+        isAuthenticated: true,
+        loading: false,
+        error: false,
+      },
+      actions: () => ({ testAction: createApiAction('data') }),
+    });
+    const duck2 = createDuck({
+      name: 'test2',
+      inject: ['test1'],
+      state: { field: 1 },
+      actions: () => ({
+        doSomethingElse: state => ({ ...state, field: 2 }),
+      }),
+      reactions: ({ deps }) => {
+        expect(deps.test1.types.testAction.loading).toEqual('test1/testAction');
+        expect(deps.test1.types.testAction.success).toEqual(
+          'test1/testAction/success'
+        );
+        expect(deps.test1.types.testAction.failure).toEqual(
+          'test1/testAction/failure'
+        );
+        return {
+          [deps.test1.types.testAction.loading]: () => ({ field: 0 }),
+          [deps.test1.types.testAction.success]: () => ({ field: 2 }),
+          [deps.test1.types.testAction.failure]: () => ({ field: 3 }),
+        };
+      },
+    });
+    const ducks = initDucks([duck1, duck2]);
+    expect(ducks).toBeDefined();
   });
 });
