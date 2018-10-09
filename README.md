@@ -28,6 +28,7 @@ Inspiration: [Ducks: Redux Reducer Bundles](https://github.com/erikras/ducks-mod
 - [Usage with redux-thunk](#usage-with-redux-thunk)
 - [Usage with redux-saga](#usage-with-redux-saga)
 - [Example with everything](#example-with-everything)
+- [Advanced](#advanced)
 - [API](#api)
 - [Other similar libraries](#other-similar-libraries)
 - [Caveats](#caveats)
@@ -62,6 +63,8 @@ Reducktion is a customized implementation of the ducks pattern and it aims to he
 in a more modular way while providing some additional utilities such as [dependency injection](dependency-injection).
 
 ## Usage
+
+Reducktion minimizes the amount of boilerplate by firstly skipping manually defining action types entirely, and secondly merging actions and reducers together.
 
 ```javascript
 // order.duck.js
@@ -270,11 +273,12 @@ const duck = createDuck({
       ...state,
       darkModeEnabled: !state.darkModeEnabled,
     }),
-
-    // Thunks here
+  }),
+  thunks: {
+     // Thunks here
     someThunk,
     otherThunkWithInjects,
-  }),
+  },
 });
 
 // Thunks
@@ -436,8 +440,8 @@ const duck = createDuck({
       hasError: false,
       orders: action.payload,
     }),
-    archiveOrders, // Some random thunk
   }),
+  thunks: { archiveOrders }, // Some random thunk
   reactions: ({ deps }) => ({
     [deps.user.types.logout]: state => ({ ...state, orders: [] }),
   }),
@@ -476,7 +480,153 @@ function* fetchOrdersSaga() {
 export default duck;
 ```
 
+## Advanced
+
+### API actions helper
+
+Nowadays, many websites are SPAs (Single Page Applications) and have to get some data from an API to show to the users.
+This data fetching process usually consists of three stages: `loading the data`, `receiving the data`, and `handling errors`.
+
+Reducktion provides some higher level helpers to make handling any API related actions
+less laborious.
+
+Let's first see what we would normally need to create the necessary things for fetching some imaginary **orders** and taking into account the three stages mentioned earlier.
+
+```js
+import { createDuck } from 'reducktion';
+
+const duck = createDuck({
+  name: 'order',
+  state: {
+    orders: [],
+    isLoading: false,
+    hasError: false,
+    error: null,
+  },
+  actions: () => ({
+    fetchOrders: state => ({
+      ...state,
+      isLoading: true,
+    }),
+    failFetchOrders: (state, action) => ({
+      ...state,
+      isLoading: false,
+      hasError: true,
+      error: action.payload,
+    }),
+    receiveOrders: (state, action) => ({
+      ...state,
+      isLoading: false,
+      hasError: false,
+      error: null,
+      orders: action.payload,
+    }),
+  }),
+  sagas: ({ types }) => [takeEvery([types.fetchOrders], fetchOrdersSaga)],
+});
+
+// Sagas
+
+function* fetchOrdersSaga() {
+  try {
+    const orders = yield call(api.fetchOrders);
+    yield put(duck.actions.receiveOrders(orders));
+  } catch (error) {
+    yield put(duck.actions.failFetchOrders(error.message));
+  }
+}
+```
+
+That's quite a lot of setup / boilerplate for handling three stages of our API call.
+
+Reducktion provides a helper action creator called `createApiAction` that can be used to create the same three actions as above baked into one enhanced action that behind the scenes updates the necessary state fields automatically by creating the individual reducers for you.
+
+The simplest way to use `createApiAction` is to just give it the name of state field (eg. **orders**) where you want to save the data.
+By default the auto-created reducers will also update three fields during the different stages of the API call.
+
+| Action                 | Description                                                    |
+| ---------------------- | -------------------------------------------------------------- |
+| `action()`             | Starts the API request.                                        |
+| `action.success(data)` | Finishes the API flow successfully and saves the data to state |
+| `action.fail(error?)`  | Fails the API flow and saves the optional error data to state  |
+
+| State field                  | Description                                                                                                    |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `isLoading`                  | Set to `true` when the API call is initiated, and set to `false` after success / failure.                      |
+| `hasError`                   | Set to `false` when when `action()` is called, and set to `true` when `action.fail()` is called.               |
+| `error`                      | Set to `false` when when `action()` is called, and set to the param of `action.fail(error)` when it is called. |
+| `orders` (or something else) | Updated with the data `action.success(data)` is called.                                                        |
+
+Example:
+
+```js
+import { createDuck, createApiAction } from 'reducktion';
+
+const duck = createDuck({
+  name: 'order',
+  state: {
+    orders: [],
+    isLoading: false,
+    hasError: false,
+    error: null,
+  },
+  actions: () => ({
+    fetchOrders: createApiAction('orders'),
+  }),
+  sagas: ({ types }) => [takeEvery([types.fetchOrders], fetchOrdersSaga)],
+});
+
+// Sagas
+
+function* fetchOrdersSaga() {
+  try {
+    // In real world you would fetch orders from some API
+    const orders = [];
+    yield put(duck.actions.fetchOrders.success(orders));
+  } catch (error) {
+    yield put(duck.actions.fetchOrders.fail(error.message));
+  }
+}
+```
+
+However, in case you need more control over your state fields for the different stages or want to add your own you can achieve it by giving `createApiAction` a reducer definition object.
+
+> NOTE: if you choose to use reducer definition object you always **have to** provide the `success` reducer! Other reducers are optional.
+
+```js
+const duck = createDuck({
+  // ...
+  actions: () => ({
+    fetchOrders: createApiAction({
+      // REQUIRED!
+      success: (state, action) => ({
+        ...state,
+        orders: action.payload,
+        isLoading: false,
+      }),
+      // optional
+      loading: (state, action) => ({
+        ...state,
+        isLoading: true,
+        hasError: false,
+        error: null,
+      }),
+      // optional
+      failure: (state, action) => ({
+        ...state,
+        isLoading: false,
+        hasError: true,
+        error: action.payload,
+      }),
+    }),
+  }),
+  // ...
+});
+```
+
 ## API
+
+> TODO: UPDATE API DOCS!
 
 Check out the more detailed [API documentation](API.md).
 
