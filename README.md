@@ -624,6 +624,32 @@ const duck = createDuck({
 });
 ```
 
+Finally, if you need to access the API action types eg. in `reactions` you can do it quite intuitively in the following way:
+
+> NOTE: since the `types.fetchProfile` is an object we can't access the loading type in the simple way (`types.fetchProfile`), but instead via `types.fetchProfile.loading`.
+
+```js
+const duck = createDuck({
+  // ...
+  inject: ['user'],
+  reactions: ({ deps }) => ({
+    [deps.user.types.fetchProfile.loading]: state => ({
+      ...state,
+      someField: 1,
+    }),
+    [deps.user.types.fetchProfile.success]: state => ({
+      ...state,
+      someField: 2,
+    }),
+    [deps.user.types.fetchProfile.failure]: state => ({
+      ...state,
+      someField: 3,
+    }),
+  }),
+  // ...
+});
+```
+
 ## API
 
 > TODO: UPDATE API DOCS!
