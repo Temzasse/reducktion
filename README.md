@@ -198,7 +198,7 @@ You have encapsulated the Redux related logic of a feature called `order` into a
 
 Reducktion can inject other ducks into other ducks so you can easily use them without manually importing the duck file. This fixes potential circular dependency issue between related ducks.
 
-You can give any number of duck names to `inject` and they will be provided to the duck inside the various methods like `.actions()`, `.reactions()` or `.sagas()`.
+You can give any number of duck names to `inject` and they will be provided to the duck inside the various handlers like `actions`, `reactions` or `sagas`.
 
 In the below example we fetch user's orders after successful login.
 
