@@ -46,12 +46,7 @@ export const handleThunks = (thunks, dependencies) =>
     return acc;
   }, {});
 
-const createApiActionReducers = ({
-  name,
-  duckName,
-  successField,
-  overrides = {},
-}) => {
+const createApiActionReducers = ({ types, successField, overrides = {} }) => {
   const noOverrides =
     !overrides.loading && !overrides.failure && !overrides.success;
 
@@ -61,25 +56,21 @@ const createApiActionReducers = ({
     );
   }
 
-  const loading = `${duckName}/${name}`;
-  const success = `${duckName}/${name}/success`;
-  const failure = `${duckName}/${name}/failure`;
-
   const reducers = {
-    [loading]: state => ({
+    [types.loading]: state => ({
       ...state,
       error: null,
       hasError: false,
       isLoading: true,
     }),
-    [success]: (state, action) => ({
+    [types.success]: (state, action) => ({
       ...state,
       [successField]: action.payload,
       error: null,
       hasError: false,
       isLoading: false,
     }),
-    [failure]: (state, action) => ({
+    [types.failure]: (state, action) => ({
       ...state,
       error: action.payload,
       hasError: true,
@@ -88,31 +79,37 @@ const createApiActionReducers = ({
   };
 
   // Apply possible overrides
-  if (overrides.loading) reducers[loading] = overrides.loading;
-  if (overrides.success) reducers[success] = overrides.success;
-  if (overrides.failure) reducers[failure] = overrides.failure;
+  if (overrides.loading) reducers[types.loading] = overrides.loading;
+  if (overrides.success) reducers[types.success] = overrides.success;
+  if (overrides.failure) reducers[types.failure] = overrides.failure;
 
   return reducers;
 };
 
-const createApiActionVariations = (name, duckName) => {
-  const action = createAction(`${duckName}/${name}`);
-  action.success = createAction(`${duckName}/${name}/success`);
-  action.fail = createAction(`${duckName}/${name}/failure`);
+const createApiActionVariations = types => {
+  const action = createAction(types.loading);
+  action.success = createAction(types.success);
+  action.fail = createAction(types.failure);
   return action;
 };
 
 export function handleApiAction(arg, name, duckName) {
-  const action = createApiActionVariations(name, duckName);
+  const types = {
+    loading: `${duckName}/${name}`,
+    success: `${duckName}/${name}/success`,
+    failure: `${duckName}/${name}/failure`,
+  };
+
+  const action = createApiActionVariations(types);
 
   // User can either provide only reducer field name for success case
   // or reducer overrides for `loading` / `success` / `failure` cases
   const reducers =
     typeof arg === 'string'
-      ? createApiActionReducers({ name, duckName, successField: arg })
-      : createApiActionReducers({ name, duckName, overrides: arg });
+      ? createApiActionReducers({ types, successField: arg })
+      : createApiActionReducers({ types, overrides: arg });
 
-  return { action, reducers };
+  return { action, reducers, types };
 }
 
 export const API_ACTION_IDENTIFIER = '__isApiAction__';

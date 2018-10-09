@@ -78,16 +78,17 @@ export const createDuck = duck => {
     // We need to provide `initialState` since it might be used in reducers
     Object.entries(duck.actions({ initialState })).forEach(
       ([actionName, reducerHandler]) => {
-        // Register action type
-        const actionType = `${duck.name}/${actionName}`;
-        types[actionName] = actionType;
-
         if (isApiAction(reducerHandler)) {
           // Handle async API actions
           const x = handleApiAction(reducerHandler.args, actionName, duck.name);
+          types[actionName] = x.types;
           actions[actionName] = x.action;
           reducerHandlers = { ...reducerHandlers, ...x.reducers };
         } else {
+          // Register action type
+          const actionType = `${duck.name}/${actionName}`;
+          types[actionName] = actionType;
+
           // Create basic action
           actions[actionName] = createAction(actionType);
           reducerHandlers[actionType] = reducerHandler;
