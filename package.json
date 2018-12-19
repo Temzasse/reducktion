@@ -75,6 +75,10 @@
     "modulePathIgnorePatterns": [
       "<rootDir>/example/"
     ],
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "**/src/*.js"
+    ]
   }
 }
