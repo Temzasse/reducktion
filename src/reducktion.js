@@ -1,16 +1,19 @@
 // @ts-check
 import { createAction, handleActions } from 'redux-actions';
+
 import {
   createSelectors,
   validateDuck,
-  handleApiAction,
+  handleFetchableAction,
   handleThunks,
-  isApiAction,
-  API_ACTION_IDENTIFIER,
+  isFetchableAction,
+  FETCHABLE_ACTION_IDENTIFIER,
+  FETCHABLE_STATUSES,
 } from './helpers';
 
+// TODO: Use TypeScript!
+
 // JSDoc typedefs
-// TODO: maybe use TypeScript or Flow?
 
 /**
  * @typedef {Object.<string, Function>} Action
@@ -74,29 +77,37 @@ export const createDuck = duck => {
   }
 
   // Create types, actions and reducer handlers from `duck.actions`
-  if (duck.actions) {
-    // We need to provide `initialState` since it might be used in reducers
-    Object.entries(duck.actions({ initialState })).forEach(
-      ([actionName, reducerHandler]) => {
-        if (isApiAction(reducerHandler)) {
-          // Handle async API actions
-          const x = handleApiAction(reducerHandler.args, actionName, duck.name);
-          types[actionName] = x.types;
-          actions[actionName] = x.action;
-          reducerHandlers = { ...reducerHandlers, ...x.reducers };
-        } else {
-          // Register action type
-          const actionType = `${duck.name}/${actionName}`;
-          types[actionName] = actionType;
+  // We need to provide `initialState` since it might be used in reducers
+  Object.entries(duck.actions({ initialState })).forEach(
+    ([actionName, reducerHandler]) => {
+      if (isFetchableAction(reducerHandler)) {
+        // Handle async API actions
+        const fetchableX = handleFetchableAction(
+          reducerHandler.args,
+          actionName,
+          duck.name
+        );
 
-          // Create basic action
-          actions[actionName] = createAction(actionType);
-          reducerHandlers[actionType] = reducerHandler;
-        }
-      },
-      {}
-    );
-  }
+        // Inline fetchable types
+        Object.entries(fetchableX.types).forEach(([k, v]) => {
+          types[k] = v;
+        });
+
+        actions[actionName] = fetchableX.action;
+        reducerHandlers = { ...reducerHandlers, ...fetchableX.reducers };
+      } else {
+        // Register action type
+        const actionType = `${duck.name}/${actionName}`;
+        types[actionName] = actionType;
+
+        // Create basic action
+        actions[actionName] = createAction(actionType);
+
+        if (reducerHandler) reducerHandlers[actionType] = reducerHandler;
+      }
+    },
+    {}
+  );
 
   // Handle thunks
   if (duck.thunks) {
@@ -108,7 +119,7 @@ export const createDuck = duck => {
 
   // Add selectors defined by user
   if (duck.selectors) {
-    const customSelectors = duck.selectors({ name: duck.name }) || {};
+    const customSelectors = duck.selectors({ name: duck.name });
     selectors = { ...selectors, ...customSelectors };
   }
 
@@ -154,8 +165,7 @@ export const createDuck = duck => {
   const _run = () => {
     // Run duck reactions function to get rest of the reducer
     if (duck.reactions) {
-      const fromDeps =
-        duck.reactions({ initialState, deps: dependencies }) || {};
+      const fromDeps = duck.reactions({ initialState, deps: dependencies });
       reducerHandlers = { ...reducerHandlers, ...fromDeps };
     }
 
@@ -176,7 +186,7 @@ export const createDuck = duck => {
    * Get sagas for the duck.
    * @returns {Array}
    */
-  const getSagas = () => sagas || [];
+  const getSagas = () => sagas;
 
   return {
     name: duck.name,
@@ -231,7 +241,16 @@ export const initDucks = (ducks = []) => {
   };
 };
 
-export const createApiAction = args => ({
-  [API_ACTION_IDENTIFIER]: true,
+export const STATUSES = FETCHABLE_STATUSES;
+
+// Description of a fetchable action
+export const fetchableAction = (...args) => ({
+  [FETCHABLE_ACTION_IDENTIFIER]: true,
   args,
+});
+
+export const fetchable = initialValue => ({
+  data: initialValue,
+  status: FETCHABLE_STATUSES.INITIAL,
+  error: null,
 });

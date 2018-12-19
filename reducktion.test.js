@@ -1,4 +1,30 @@
-import { createDuck, initDucks, createApiAction } from './src/reducktion';
+import {
+  createDuck,
+  initDucks,
+  fetchable,
+  fetchableAction,
+  STATUSES,
+} from './src/reducktion';
+
+describe('fetchable/fetchableAction', () => {
+  it('should create fetchable value', () => {
+    const f = fetchable([]);
+    expect(f.data).toEqual([]);
+    expect(f.status).toEqual(STATUSES.INITIAL);
+    expect(f.error).toEqual(null);
+  });
+
+  it('should create description of fetchable action', () => {
+    const fa = fetchableAction('orders');
+    expect(fa.args).toEqual(['orders']);
+
+    const fa2 = fetchableAction('orders', {
+      loading: state => ({ ...state, some: 1 }),
+    });
+    expect(fa2.args[0]).toEqual('orders');
+    expect(fa2.args[1].loading).toBeInstanceOf(Function);
+  });
+});
 
 describe('createDuck', () => {
   it('should create a duck', () => {
@@ -151,40 +177,67 @@ describe('createDuck', () => {
     });
   });
 
-  describe('createApiAction', () => {
-    it('should create api actions', () => {
+  describe('fetchableAction', () => {
+    it('should create fetchable actions', () => {
       const duck = createDuck({
         name: 'test',
         state: {
-          orders: [],
-          isAuthenticated: true,
-          loading: false,
-          error: false,
+          orders: fetchable([]),
         },
-        actions: () => ({ testAction: createApiAction('orders') }),
+        actions: () => ({ testAction: fetchableAction('orders') }),
       });
 
       expect(duck.actions.testAction).toBeDefined();
       expect(duck.actions.testAction.success).toBeDefined();
       expect(duck.actions.testAction.fail).toBeDefined();
-      expect(duck.types.testAction.loading).toEqual('test/testAction');
-      expect(duck.types.testAction.success).toEqual('test/testAction/success');
-      expect(duck.types.testAction.failure).toEqual('test/testAction/failure');
+      expect(duck.actions.testAction.init).toBeDefined();
+
+      expect(duck.types.testAction).toEqual('test/testAction');
+      expect(duck.types.testActionInit).toEqual('test/testAction/init');
+      expect(duck.types.testActionSuccess).toEqual('test/testAction/success');
+      expect(duck.types.testActionFailure).toEqual('test/testAction/failure');
+
+      const orders = {
+        data: [],
+        status: STATUSES.INITIAL,
+        error: null,
+      };
+
+      const state = { test: { orders } };
+
+      expect(duck.selectors.get('orders', state)).toEqual(orders);
     });
 
-    it('should throw if api action has no success field', () => {
+    it('should throw if fetchable action has no success field', () => {
       expect(() => {
         createDuck({
           name: 'test',
           state: {
-            orders: [],
-            isAuthenticated: true,
-            loading: false,
-            error: false,
+            orders: fetchable([]),
           },
-          actions: () => ({ testAction: createApiAction() }),
+          actions: () => ({ testAction: fetchableAction() }),
         });
       }).toThrowError(/you must provide the name of the field/i);
+    });
+
+    it('should not require initial data for fetchable', () => {
+      const duck = createDuck({
+        name: 'test',
+        state: {
+          orders: fetchable(),
+        },
+        actions: () => ({ testAction: fetchableAction('orders') }),
+      });
+
+      const orders = {
+        data: undefined,
+        status: STATUSES.INITIAL,
+        error: null,
+      };
+
+      const state = { test: { orders } };
+
+      expect(duck.selectors.get('orders', state).data).toEqual(undefined);
     });
   });
 });
@@ -297,17 +350,16 @@ describe('initDucks', () => {
     }).toThrowError(/there is no dependendy called 'test3'/i);
   });
 
-  it('should be able to use API action types in reactions', () => {
+  it('should be able to use fetchable action types in reactions', () => {
     const duck1 = createDuck({
       name: 'test1',
       state: {
-        data: [],
+        data: fetchable([]),
         isAuthenticated: true,
-        loading: false,
-        error: false,
       },
-      actions: () => ({ testAction: createApiAction('data') }),
+      actions: () => ({ testAction: fetchableAction('data') }),
     });
+
     const duck2 = createDuck({
       name: 'test2',
       inject: ['test1'],
@@ -316,21 +368,46 @@ describe('initDucks', () => {
         doSomethingElse: state => ({ ...state, field: 2 }),
       }),
       reactions: ({ deps }) => {
-        expect(deps.test1.types.testAction.loading).toEqual('test1/testAction');
-        expect(deps.test1.types.testAction.success).toEqual(
+        expect(deps.test1.types.testAction).toEqual('test1/testAction');
+        expect(deps.test1.types.testActionInit).toEqual(
+          'test1/testAction/init'
+        );
+        expect(deps.test1.types.testActionSuccess).toEqual(
           'test1/testAction/success'
         );
-        expect(deps.test1.types.testAction.failure).toEqual(
+        expect(deps.test1.types.testActionFailure).toEqual(
           'test1/testAction/failure'
         );
         return {
-          [deps.test1.types.testAction.loading]: () => ({ field: 0 }),
-          [deps.test1.types.testAction.success]: () => ({ field: 2 }),
-          [deps.test1.types.testAction.failure]: () => ({ field: 3 }),
+          [deps.test1.types.testAction]: () => ({ field: 0 }),
+          [deps.test1.types.testActionSuccess]: () => ({ field: 2 }),
+          [deps.test1.types.testActionFailure]: () => ({ field: 3 }),
         };
       },
     });
+
     const ducks = initDucks([duck1, duck2]);
+
     expect(ducks).toBeDefined();
+  });
+
+  it('should accept overrides for fetchable action', () => {
+    const duck = createDuck({
+      name: 'test1',
+      state: {
+        orders: fetchable([]),
+      },
+      actions: () => ({
+        testAction: fetchableAction('orders', {
+          loading: state => ({ ...state, some1: 1 }),
+          success: state => ({ ...state, some2: 2 }),
+          failure: state => ({ ...state, some3: 3 }),
+        }),
+      }),
+    });
+
+    const ducks = initDucks([duck]);
+
+    expect(ducks.allReducers.test1).toBeDefined();
   });
 });

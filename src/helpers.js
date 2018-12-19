@@ -3,13 +3,45 @@ import { createAction } from 'redux-actions';
 
 const capitalize = word => word.charAt(0).toUpperCase() + word.slice(1);
 
-export const isFunction = f => f && {}.toString.call(f) === '[object Function]';
+const isObject = o => typeof o === 'object' && o !== null;
+
+const reduceReducers = (...reducers) => {
+  const initialState = null;
+
+  return (prevState, value, ...args) => {
+    const prevStateIsUndefined = typeof prevState === 'undefined';
+    const valueIsUndefined = typeof value === 'undefined';
+
+    if (prevStateIsUndefined && valueIsUndefined && initialState) {
+      return initialState;
+    }
+
+    const x = prevStateIsUndefined && !valueIsUndefined && initialState;
+
+    return reducers.reduce((newState, reducer, index) => {
+      if (typeof reducer === 'undefined') {
+        throw new TypeError(
+          `An undefined reducer was passed in at index ${index}`
+        );
+      }
+
+      return reducer(newState, value, ...args);
+    }, x ? initialState : prevState);
+  };
+};
 
 export const camelCasedAction = action =>
   action
     .toLowerCase()
     .split('_')
     .reduce((acc, x, i) => (i === 0 ? acc + x : acc + capitalize(x)), '');
+
+export const FETCHABLE_STATUSES = {
+  INITIAL: 'INITIAL',
+  LOADING: 'LOADING',
+  SUCCESS: 'SUCCESS',
+  FAILURE: 'FAILURE',
+};
 
 export const validateInject = injected => {
   if (!Array.isArray(injected)) {
@@ -46,73 +78,106 @@ export const handleThunks = (thunks, dependencies) =>
     return acc;
   }, {});
 
-const createApiActionReducers = ({ types, successField, overrides = {} }) => {
-  const noOverrides =
-    !overrides.loading && !overrides.failure && !overrides.success;
-
-  if (!successField && noOverrides) {
+const createFetchableReducers = ({ types, successField, overrides }) => {
+  if (!successField) {
     throw Error(
       'You must provide the name of the field that is used for success payload'
     );
   }
 
-  const reducers = {
+  const defaultReducers = {
     [types.loading]: state => ({
       ...state,
-      error: null,
-      hasError: false,
-      isLoading: true,
+      [successField]: {
+        ...state[successField],
+        status: FETCHABLE_STATUSES.LOADING,
+        error: null,
+      },
     }),
     [types.success]: (state, action) => ({
       ...state,
-      [successField]: action.payload,
-      error: null,
-      hasError: false,
-      isLoading: false,
+      [successField]: {
+        data: action.payload,
+        status: FETCHABLE_STATUSES.SUCCESS,
+        error: null,
+      },
     }),
     [types.failure]: (state, action) => ({
       ...state,
-      error: action.payload,
-      hasError: true,
-      isLoading: false,
+      [successField]: {
+        ...state[successField],
+        status: FETCHABLE_STATUSES.FAILURE,
+        error: action.payload,
+      },
     }),
   };
 
-  // Apply possible overrides
-  if (overrides.loading) reducers[types.loading] = overrides.loading;
-  if (overrides.success) reducers[types.success] = overrides.success;
-  if (overrides.failure) reducers[types.failure] = overrides.failure;
+  if (!isObject(overrides)) return defaultReducers;
 
-  return reducers;
+  // Apply possible overrides
+  return Object.values(types).reduce((acc, t) => {
+    acc[t] = overrides[t]
+      ? reduceReducers(defaultReducers[t], overrides[t])
+      : defaultReducers[t];
+    return acc;
+  }, {});
 };
 
-const createApiActionVariations = types => {
+const createFetchableAction = types => {
   const action = createAction(types.loading);
   action.success = createAction(types.success);
   action.fail = createAction(types.failure);
+  action.init = createAction(types.init);
   return action;
 };
 
-export function handleApiAction(arg, name, duckName) {
-  const types = {
-    loading: `${duckName}/${name}`,
-    success: `${duckName}/${name}/success`,
-    failure: `${duckName}/${name}/failure`,
+export function handleFetchableAction(args, actionName, duckName) {
+  const typePrefix = `${duckName}/${actionName}`;
+
+  const t = {
+    loading: typePrefix,
+    success: `${typePrefix}/success`,
+    failure: `${typePrefix}/failure`,
+    // NOTE: Also provide `init` for cases where loading should not be
+    // dispatched as the default action
+    init: `${typePrefix}/init`,
   };
 
-  const action = createApiActionVariations(types);
+  const action = createFetchableAction(t);
 
   // User can either provide only reducer field name for success case
   // or reducer overrides for `loading` / `success` / `failure` cases
-  const reducers =
-    typeof arg === 'string'
-      ? createApiActionReducers({ types, successField: arg })
-      : createApiActionReducers({ types, overrides: arg });
+  const reducers = createFetchableReducers({
+    types: t,
+    successField: args.length > 0 ? args[0] : null,
+    overrides: args.length > 1 ? args[1] : {},
+  });
+
+  // Return types that are inlined to the other types instead of accessing them
+  // via `types.fetchSomething.success` you access them normally
+  // without object notation `types.fetchSomethingSuccess`
+  // (where `fetchSomething` is the action name)
+  const types = {
+    [actionName]: typePrefix,
+    [`${actionName}Init`]: `${typePrefix}/init`,
+    [`${actionName}Success`]: `${typePrefix}/success`,
+    [`${actionName}Failure`]: `${typePrefix}/failure`,
+  };
 
   return { action, reducers, types };
 }
 
-export const API_ACTION_IDENTIFIER = '__isApiAction__';
+export const FETCHABLE_ACTION_IDENTIFIER = '__IS_FETCHABLE_ACTION__';
 
-export const isApiAction = x =>
-  x && Object.prototype.hasOwnProperty.call(x, API_ACTION_IDENTIFIER);
+export const isFetchableAction = x =>
+  x && Object.prototype.hasOwnProperty.call(x, FETCHABLE_ACTION_IDENTIFIER);
+
+/**
+ * Refactor to use `status` instead of separate
+ * `isLoading` / `hasError` / `error` boolean flags
+ */
+export const API_STATUSES = {
+  LOADING: 'LOADING',
+  FAILURE: 'FAILURE',
+  SUCCESS: 'SUCCESS',
+};
