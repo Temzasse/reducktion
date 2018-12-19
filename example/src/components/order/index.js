@@ -2,30 +2,36 @@ import React, { Component } from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { STATUSES } from 'reducktion'; // eslint-disable-line
 
+import { fetchablePropType, isLoading } from '../../helpers';
 import orderDucks from './order.duck';
 import settingsDuck from '../settings/settings.duck';
 
 class Order extends Component {
   static propTypes = {
-    orders: PropTypes.array.isRequired,
-    isLoading: PropTypes.bool.isRequired,
+    orders: fetchablePropType(PropTypes.array.isRequired),
     fetchOrders: PropTypes.func.isRequired,
+    fetchPackages: PropTypes.func.isRequired,
   };
 
+  componentDidMount() {
+    // this.props.fetchPackages();
+  }
+
   render() {
-    const { orders, fetchOrders, isLoading } = this.props;
+    const { orders, fetchOrders } = this.props;
 
     return (
       <Container>
         <h1>Order example</h1>
         <button onClick={fetchOrders}>Fetch orders</button>
 
-        {isLoading && <Loading>Loading orders..</Loading>}
+        {isLoading(orders) && <Loading>Loading orders..</Loading>}
 
-        {orders.length > 0 && (
+        {orders.data.length > 0 && (
           <Orders>
-            {orders.map(order => (
+            {orders.data.map(order => (
               <li key={order.id}>{order.name}</li>
             ))}
           </Orders>
@@ -52,10 +58,12 @@ export default connect(
   state => ({
     // orders: orderDucks.selectors.getOrders(state),
     orders: orderDucks.selectors.get('orders', state),
-    isLoading: orderDucks.selectors.getIsLoading(state),
   }),
   {
     testThunk: settingsDuck.actions.testThunk,
     fetchOrders: orderDucks.actions.fetchOrders,
+    // Use `init` action instead of the default action to not start loading
+    // automatically when the action is dispatched
+    fetchPackages: orderDucks.actions.fetchPackages.init,
   }
 )(Order);
