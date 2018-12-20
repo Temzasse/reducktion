@@ -4,7 +4,7 @@ const cjs = BABEL_ENV === 'cjs' || NODE_ENV === 'test';
 module.exports = {
   presets: [
     [
-      'env',
+      '@babel/preset-env',  
       {
         modules: false,
         loose: true,
@@ -15,7 +15,7 @@ module.exports = {
     ],
   ],
   plugins: [
-    'transform-object-rest-spread',
-    cjs && 'transform-es2015-modules-commonjs'
+    '@babel/plugin-proposal-object-rest-spread',
+    cjs && '@babel/plugin-transform-modules-commonjs'
   ].filter(Boolean)
 };
