@@ -219,9 +219,9 @@ const duck = createDuck({
     receiveOrders: (state, action) => ({ ... }),
   }),
   sagas: ({ types, deps }) => [
-    takeEvery([types.fetchOrders], fetchOrdersSaga),
+    takeEvery(types.fetchOrders, fetchOrdersSaga),
     // Listen to user's `loginSuccess` action
-    takeEvery([deps.user.types.loginSuccess], fetchOrdersSaga),
+    takeEvery(deps.user.types.loginSuccess, fetchOrdersSaga),
   ],
 });
 
@@ -340,8 +340,8 @@ const duck = createDuck({
     }),
   }),
   sagas: ({ types, deps }) => [
-    takeEvery([types.fetchOrders], fetchOrdersSaga),
-    takeLatest([deps.user.types.logout], someOtherSaga, deps),
+    takeEvery(types.fetchOrders, fetchOrdersSaga),
+    takeLatest(deps.user.types.logout, someOtherSaga, deps),
   ],
 });
 
@@ -451,8 +451,8 @@ const duck = createDuck({
     getHasError: state => state[name].hasError,
   }),
   sagas: ({ types, deps }) => [
-    takeEvery([types.fetchOrders], fetchOrdersSaga),
-    takeEvery([deps.user.types.loginSuccess], fetchOrdersSaga),
+    takeEvery(types.fetchOrders, fetchOrdersSaga),
+    takeEvery(deps.user.types.loginSuccess, fetchOrdersSaga),
   ],
 });
 
@@ -482,13 +482,12 @@ export default duck;
 
 ## Advanced
 
-### API actions helper
+### Data fetching helper
 
 Nowadays, many websites are SPAs (Single Page Applications) and have to get some data from an API to show to the users.
 This data fetching process usually consists of three stages: `loading the data`, `receiving the data`, and `handling errors`.
 
-Reducktion provides some higher level helpers to make handling any API related actions
-less laborious.
+Reducktion provides some higher level helpers to make handling any API related actions less laborious.
 
 Let's first see what we would normally need to create the necessary things for fetching some imaginary **orders** and taking into account the three stages mentioned earlier.
 
@@ -499,30 +498,27 @@ const duck = createDuck({
   name: 'order',
   state: {
     orders: [],
-    isLoading: false,
-    hasError: false,
+    status: 'INITIAL', // 'LOADING' | 'SUCCESS' | 'FAILURE'
     error: null,
   },
   actions: () => ({
     fetchOrders: state => ({
       ...state,
-      isLoading: true,
+      status: 'LOADING',
     }),
     failFetchOrders: (state, action) => ({
       ...state,
-      isLoading: false,
-      hasError: true,
+      status: 'FAILURE',
       error: action.payload,
     }),
     receiveOrders: (state, action) => ({
       ...state,
-      isLoading: false,
-      hasError: false,
+      status: 'SUCCESS',
       error: null,
       orders: action.payload,
     }),
   }),
-  sagas: ({ types }) => [takeEvery([types.fetchOrders], fetchOrdersSaga)],
+  sagas: ({ types }) => [takeEvery(types.fetchOrders, fetchOrdersSaga)],
 });
 
 // Sagas
@@ -537,47 +533,70 @@ function* fetchOrdersSaga() {
 }
 ```
 
-That's quite a lot of setup / boilerplate for handling three stages of our API call.
+That's quite a lot of setup / boilerplate for handling three stages of our data fetching flow.
 
-Reducktion provides a helper action creator called `createApiAction` that can be used to create the same three actions as above baked into one enhanced action that behind the scenes updates the necessary state fields automatically by creating the individual reducers for you.
+Reducktion provides a helpers called `fetchable` and `fetchableAction` that can be used to create a fetchable state value and the same three actions as above baked into one enhanced action that behind the scenes updates the necessary state fields automatically by creating the individual reducers for you.
 
-The simplest way to use `createApiAction` is to just give it the name of state field (eg. **orders**) where you want to save the data.
-By default the auto-created reducers will also update three fields during the different stages of the API call.
+The simplest way to use `fetchableAction` is to just give it the name of state field (eg. **orders**) where you want to save the data.
+By default the auto-created reducers will also update three fields during the different stages of the flow.
 
-| Action                 | Description                                                    |
-| ---------------------- | -------------------------------------------------------------- |
-| `action()`             | Starts the API request.                                        |
-| `action.success(data)` | Finishes the API flow successfully and saves the data to state |
-| `action.fail(error?)`  | Fails the API flow and saves the optional error data to state  |
+**`fetchableAction`** returns an enhanced action/reducer:
 
-| State field                  | Description                                                                                                    |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `isLoading`                  | Set to `true` when the API call is initiated, and set to `false` after success / failure.                      |
-| `hasError`                   | Set to `false` when when `action()` is called, and set to `true` when `action.fail()` is called.               |
-| `error`                      | Set to `false` when when `action()` is called, and set to the param of `action.fail(error)` when it is called. |
-| `orders` (or something else) | Updated with the data `action.success(data)` is called.                                                        |
+| Action                 | Description                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| `action()`             | Starts the fetchable flow and sets status to 'LOADING'.                              |
+| `action.success(data)` | Finishes flow by setting status to 'SUCCESS' and saves the data to state             |
+| `action.fail(error?)`  | Fails flow by setting status to 'FAILURE' and saves the optional error data to state |
+| `action.init()`        | OPTIONAL: initialize flow without setting loading status                             |
+
+Corresponding generated types are: `types.action`, `types.actionSuccess`, `types.actionFailure`, `types.actionInit`.
+
+**`fetchable`** returns an object:
+
+| Field    | Description                                   |
+| -------- | --------------------------------------------- |
+| `status` | 'INITIAL' / 'LOADING' / 'SUCCESS' / 'FAILURE' |
+| `error`  | Error payload from `action.fail(error)`       |
+| `data`   | Data payload from `action.success(data)`      |
 
 Example:
 
 ```js
-import { createDuck, createApiAction } from 'reducktion';
+import { createDuck, fetchable, fetchableAction } from 'reducktion';
 
 const duck = createDuck({
   name: 'order',
   state: {
-    orders: [],
-    isLoading: false,
-    hasError: false,
-    error: null,
+    orders: fetchable([]),
+    /*
+    {
+      data: [],
+      status: 'INITIAL',
+      error: null,
+    }
+    */
   },
   actions: () => ({
-    fetchOrders: createApiAction('orders'),
+    fetchOrders: fetchableAction('orders'),
+    /*
+    fetchOrders()
+    fetchOrders.success()
+    fetchOrders.failure()
+    fetchOrders.init()
+    */
   }),
-  sagas: ({ types }) => [takeEvery([types.fetchOrders], fetchOrdersSaga)],
+  sagas: ({ types }) => [
+    takeEvery(types.fetchOrders, fetchOrdersSaga),
+    /*
+    types.fetchOrders
+    types.fetchOrdersSuccess
+    types.fetchOrdersFailure
+    types.fetchOrdersInit
+    */
+  ],
 });
 
 // Sagas
-
 function* fetchOrdersSaga() {
   try {
     // In real world you would fetch orders from some API
@@ -587,36 +606,29 @@ function* fetchOrdersSaga() {
     yield put(duck.actions.fetchOrders.fail(error.message));
   }
 }
+
+// And finally in some component you start the fetching flow
+this.props.fetchOrders();
 ```
 
-However, in case you need more control over your state fields for the different stages or want to add your own you can achieve it by giving `createApiAction` a reducer definition object.
-
-> NOTE: if you choose to use reducer definition object you always **have to** provide the `success` reducer! Other reducers are optional.
+However, in case you need more control over your `fetchable` state fields for the different stages you can achieve it by giving `fetchableAction` a reducer definition object that is merged with the auto-created reducers.
 
 ```js
 const duck = createDuck({
   // ...
   actions: () => ({
-    fetchOrders: createApiAction({
-      // REQUIRED!
-      success: (state, action) => ({
-        ...state,
-        orders: action.payload,
-        isLoading: false,
-      }),
-      // optional
+    fetchOrders: fetchableAction('orders', {
       loading: (state, action) => ({
         ...state,
-        isLoading: true,
-        hasError: false,
-        error: null,
+        something: 'yey...',
       }),
-      // optional
+      success: (state, action) => ({
+        ...state,
+        something: 'yey!',
+      }),
       failure: (state, action) => ({
         ...state,
-        isLoading: false,
-        hasError: true,
-        error: action.payload,
+        something: ':(',
       }),
     }),
   }),
@@ -624,30 +636,48 @@ const duck = createDuck({
 });
 ```
 
-Finally, if you need to access the API action types eg. in `reactions` you can do it quite intuitively in the following way:
-
-> NOTE: since the `types.fetchProfile` is an object we can't access the loading type in the simple way (`types.fetchProfile`), but instead via `types.fetchProfile.loading`.
+If you need to access the API action types eg. in `reactions` or in `sagas` you can do it in the following way:
 
 ```js
 const duck = createDuck({
   // ...
   inject: ['user'],
   reactions: ({ deps }) => ({
-    [deps.user.types.fetchProfile.loading]: state => ({
+    [deps.user.types.fetchProfileLoading]: state => ({
       ...state,
       someField: 1,
     }),
-    [deps.user.types.fetchProfile.success]: state => ({
+    [deps.user.types.fetchProfileSuccess]: state => ({
       ...state,
       someField: 2,
     }),
-    [deps.user.types.fetchProfile.failure]: state => ({
+    [deps.user.types.fetchProfileFailure]: state => ({
       ...state,
       someField: 3,
     }),
   }),
   // ...
 });
+```
+
+Finally, if you are using [props-types](https://github.com/facebook/prop-types) you can define a tiny helper function to add make it easier to add prop types to fetchable values.
+
+```js
+import { STATUSES } from 'reducktion';
+
+// Helper
+const fetchablePropType = (dataPropType, errPropType = PropTypes.string) => {
+  return PropTypes.shape({
+    status: PropTypes.oneOf(STATUSES).isRequired,
+    error: errPropType,
+    data: dataPropType,
+  }).isRequired;
+};
+
+// Using the helper
+const propsTypes = {
+  balanceItems: fetchablePropType(PropTypes.array.isRequired),
+}
 ```
 
 ## API
