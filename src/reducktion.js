@@ -11,53 +11,7 @@ import {
   FETCHABLE_STATUSES,
 } from './helpers';
 
-// TODO: Use TypeScript!
-
-// JSDoc typedefs
-
-/**
- * @typedef {Object.<string, Function>} Action
- */
-
-/**
- * @typedef {Object.<string, Function>} Selectors
- */
-
-/**
- * @typedef {Object.<string, string>} Types
- */
-
-/**
- * @typedef {Object} DuckDefinition
- * @property {String} name
- * @property {Object} state
- * @property {String[]} inject
- * @property {Function} actions
- * @property {Function} selectors
- * @property {Function} sagas
- */
-
-/**
- * @typedef {Object} Duck
- * @property {Function} _run
- * @property {Function} _fillDeps
- * @property {Boolean} _created
- * @property {Function} getSagas
- * @property {Function} getReducer
- * @property {String} name
- * @property {Action} actions
- * @property {Types} types
- * @property {Selectors} selectors
- * @property {Object.<string, any>} initialState
- */
-
-/**
- * Creates a ducks duck and returns chainable functions to define futher props.
- * @param {string} duckName
- * @param {string[]} typeList
- * @param {Object.<string, any>} duck
- * @returns {Duck}
- */
+// Creates a ducks duck and returns chainable functions to define futher props.
 export const createDuck = duck => {
   validateDuck(duck);
 
@@ -138,10 +92,7 @@ export const createDuck = duck => {
 
   selectors = { ...selectors, get: getSelector };
 
-  /**
-   * Fills in the dependencies that were requested when calling inject.
-   * @param {Object.<string, Duck>} deps
-   */
+  // Fills in the dependencies that were requested when calling inject.
   const _fillDeps = deps => {
     Object.keys(dependencies).forEach(dep => {
       if (deps[dep]) {
@@ -159,9 +110,7 @@ export const createDuck = duck => {
     });
   };
 
-  /**
-   * Run reducer and sagas functions with the necessary data.
-   */
+  // Run reducer and sagas functions with the necessary data.
   const _run = () => {
     // Run duck reactions function to get rest of the reducer
     if (duck.reactions) {
@@ -176,16 +125,10 @@ export const createDuck = duck => {
     }
   };
 
-  /**
-   * Get reducer for the duck.
-   * @returns {Function}
-   */
+  // Get reducer for the duck.
   const getReducer = () => reducer;
 
-  /**
-   * Get sagas for the duck.
-   * @returns {Array}
-   */
+  // Get sagas for the duck.
   const getSagas = () => sagas;
 
   return {
@@ -201,11 +144,7 @@ export const createDuck = duck => {
   };
 };
 
-/**
- * Create ducks.
- * @param {Duck[]} ducks
- * @returns {Object.<string, Duck>}
- */
+// Create the final ducks with dependencies injected
 export const initDucks = (ducks = []) => {
   const ducksByName = ducks.reduce((acc, val) => {
     acc[val.name] = val;
