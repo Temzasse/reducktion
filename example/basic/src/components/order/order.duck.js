@@ -7,6 +7,13 @@ const duck = createDuck({
   inject: ['user'],
   state: {
     orders: fetchable([]),
+    /*
+    {
+      data: [],
+      status: 'INITIAL', LOADING | SUCCESS | FAILURE,
+      error: null,
+    }
+    */
     packages: fetchable([]),
   },
   actions: () => ({
@@ -14,11 +21,26 @@ const duck = createDuck({
     // fetchOrders: fetchableAction('orders'),
     // You can also define overrides for updating the state in your own way
     fetchOrders: fetchableAction('orders', {
-      loading: state => ({
-        ...state,
-        foo: 1,
-      }),
+      loading: state => ({ ...state, yolo: 1 }),
+      success: state => ({ ...state, yolo: 2 }),
+      failure: state => ({ ...state, yolo: 3 }),
     }),
+    /*
+    fetchOrders
+    fetchOrders.success(data)
+    fetchOrders.failure(error)
+    fetchOrders.init()
+    */
+
+
+
+
+    // fetchOrders: fetchableAction('orders', {
+    //   loading: state => ({
+    //     ...state,
+    //     foo: 1,
+    //   }),
+    // }),
     fetchPackages: fetchableAction('packages'),
   }),
   reactions: ({ deps, initialState }) => ({
@@ -37,6 +59,10 @@ const duck = createDuck({
     takeEvery(deps.user.types.loginSuccess, fetchOrdersSaga),
   ],
 });
+
+/*
+model.selectors.get('orders')
+*/
 
 // Saga handlers
 function* fetchOrdersSaga() {
