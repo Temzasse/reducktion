@@ -124,7 +124,7 @@ export const createDuck = duck => {
   }
 
   // Add simple `get` for selecting state fields by name
-  const getSelector = (key, state) => {
+  const getSelector = key => state => {
     const statePart = state[duck.name];
 
     if (!Object.prototype.hasOwnProperty.call(statePart, key)) {
