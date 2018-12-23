@@ -12,12 +12,6 @@ declare module 'reducktion' {
     status: STATUSES;
   }
 
-  type Reducer<S, A> = (state: S, action?: A) => S;
-
-  interface IActionReducers<S, A = any> {
-    [x: string]: Reducer<S, A>;
-  }
-
   interface ISelectors {
     [x: string]: (state: any) => any;
   }
@@ -30,10 +24,16 @@ declare module 'reducktion' {
     [x: string]: string;
   }
 
-  interface IAction<T> {
+  interface IAction<T = any> {
     type: string;
     payload?: T;
     [x: string]: any; // Allow additional meta fields
+  }
+
+  type Reducer<S, P> = (state: S, action: IAction<P>) => S;
+
+  interface IActionReducers<S> {
+    [x: string]: Reducer<S, any>;
   }
 
   type IActionCreator<T = any> = (payload?: T) => IAction<T>;
@@ -42,10 +42,10 @@ declare module 'reducktion' {
     [x: string]: IActionCreator;
   }
 
-  interface FetchableReducers<S = {}, A = any> {
-    loading: Reducer<S, A>;
-    success: Reducer<S, A>;
-    failure: Reducer<S, A>;
+  interface FetchableReducers<S = {}> {
+    loading: Reducer<S, any>;
+    success: Reducer<S, any>;
+    failure: Reducer<S, any>;
   }
 
   export interface IFetchableAction<S = any, F = any, I = any>
@@ -86,6 +86,7 @@ declare module 'reducktion' {
     [x: string]: Reducer<any, any>;
   }
 
+  // TODO: Not sure if these need to be typed properly...
   interface InitedDucks {
     allReducers: IAllReducers;
     allSagas: any[];
