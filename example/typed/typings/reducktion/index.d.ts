@@ -51,13 +51,14 @@ declare module 'reducktion' {
     success: IActionCreator<S>;
   }
 
-  interface IActionReducers<S, A> {
-    [x: string]: Reducer<S, any> | FetchableReducers<S>;
-  }
-
-  // type IActionReducers<S, A> = {
-  //   [K in keyof A]: Reducer<S, any> | FetchableReducers<S>;
+  // interface IActionReducers<S, A> {
+  //   [x: string]: Reducer<S, any> | FetchableReducers<S>;
   // }
+
+  // Only include those keys that are present in the action's interface
+  type IActionReducers<S, A> = {
+    [K in keyof A]: Reducer<S, any> | FetchableReducers<S>;
+  }
 
   interface DuckDefinition<S, A> {
     name: string;
