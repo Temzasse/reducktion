@@ -1,35 +1,8 @@
 import { takeEvery, put, select } from 'redux-saga/effects';
-
-import {
-  createDuck,
-  fetchableAction,
-  fetchable,
-  IFetchable,
-  IFetchableAction,
-} from 'reducktion';
+import { createDuck, fetchableAction, fetchable } from 'reducktion';
 
 import { sleep } from '../../helpers';
-
-interface IOrder {
-  id: number;
-  name: string;
-}
-
-interface IPackage {
-  name: string;
-}
-
-interface IActions {
-  fetchOrders: IFetchableAction<IOrder[]>;
-  fooAction: () => any;
-}
-
-interface IState {
-  foo: number;
-  bar: string;
-  orders: IFetchable<IOrder[]>;
-  packages: IFetchable<IPackage[]>;
-}
+import { IState, IActions } from './order.types';
 
 const duck = createDuck<IState, IActions>({
   name: 'order',
@@ -52,12 +25,10 @@ const duck = createDuck<IState, IActions>({
   selectors: ({ name }) => ({
     getFoo: state => state[name].foo,
   }),
-  sagas: ({ types }) => [takeEvery(types.fetchOrders, fetchOrdersSaga)],
+  sagas: ({ types }) => [
+    takeEvery(types.fetchOrders, fetchOrdersSaga),
+  ],
 });
-
-/*
-model.selectors.get('orders')
-*/
 
 // Saga handlers
 function* fetchOrdersSaga(action: any): any {

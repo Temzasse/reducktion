@@ -4,9 +4,10 @@ import { connect } from 'react-redux';
 import { STATUSES } from 'reducktion';
 
 import orderDucks from './order.duck';
+import { FetchableOrders } from './order.types';
 
 class Order extends Component<{
-  orders: any;
+  orders: FetchableOrders;
   fetchOrders: () => any;
 }> {
   render() {
