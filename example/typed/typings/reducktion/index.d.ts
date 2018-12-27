@@ -32,17 +32,13 @@ declare module 'reducktion' {
 
   type Reducer<S, P> = (state: S, action: IAction<P>) => S;
 
-  interface IActionReducers<S> {
-    [x: string]: Reducer<S, any>;
-  }
-
   type IActionCreator<T = any> = (payload?: T) => IAction<T>;
 
   interface IActions {
     [x: string]: IActionCreator;
   }
 
-  interface FetchableReducers<S = {}> {
+  interface FetchableReducers<S> {
     loading: Reducer<S, any>;
     success: Reducer<S, any>;
     failure: Reducer<S, any>;
@@ -55,11 +51,15 @@ declare module 'reducktion' {
     success: IActionCreator<S>;
   }
 
-  interface DuckDefinition<S> {
+  interface IActionReducers<S, A> {
+    [x: string]: Reducer<S, any> | FetchableReducers<S>;
+  }
+
+  interface DuckDefinition<S, A> {
     name: string;
     inject?: string[];
     state: S;
-    actions: ({ initialState }: { initialState: S }) => IActionReducers<S>;
+    actions: ({ initialState }: { initialState: S }) => IActionReducers<S, A>;
     selectors?: ({ name }: { name: string }) => ISelectors;
     sagas?: ({ types, deps }: { types: ITypes; deps: any }) => any[];
     thunks?: IThunks;
@@ -78,9 +78,7 @@ declare module 'reducktion' {
     getReducer: () => any;
   }
 
-  export function createDuck<S = {}, A = IActions>(
-    df: DuckDefinition<S>
-  ): Duck<S, A>;
+  export function createDuck<S, A>(df: DuckDefinition<S, A>): Duck<S, A>;
 
   interface IAllReducers {
     [x: string]: Reducer<any, any>;
@@ -95,10 +93,10 @@ declare module 'reducktion' {
 
   export function initDucks(ducks: Duck<any, any>[]): InitedDucks;
 
-  export function fetchableAction(
-    valField: string,
-    customReducers?: FetchableReducers
-  ): any;
+  export function fetchableAction<S, K extends keyof S>(
+    valField: K,
+    customReducers?: Partial<FetchableReducers<S>>
+  ): FetchableReducers<S>;
 
   export function fetchable<T>(val: T): IFetchable<T>;
 }

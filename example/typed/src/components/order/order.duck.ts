@@ -15,15 +15,20 @@ interface IOrder {
   name: string;
 }
 
-interface IState {
-  foo: number;
-  bar: string;
-  orders: IFetchable<IOrder[]>;
+interface IPackage {
+  name: string;
 }
 
 interface IActions {
   fetchOrders: IFetchableAction<IOrder[]>;
   fooAction: () => any;
+}
+
+interface IState {
+  foo: number;
+  bar: string;
+  orders: IFetchable<IOrder[]>;
+  packages: IFetchable<IPackage[]>;
 }
 
 const duck = createDuck<IState, IActions>({
@@ -32,12 +37,16 @@ const duck = createDuck<IState, IActions>({
     foo: 1,
     bar: 'lol',
     orders: fetchable([]),
+    packages: fetchable([]),
   },
   actions: ({ initialState }) => ({
-    fetchOrders: fetchableAction('orders'),
-    fooAction: state => ({
-      ...state,
-      foo: initialState.foo + 1,
+    // Basic actions
+    fooAction: state => ({ ...state, foo: initialState.foo + 1 }),
+    // Fetchable actions
+    fetchPackages: fetchableAction('packages'),
+    fetchOrders: fetchableAction('orders', {
+      // Define custom reducer for loading status
+      loading: state => ({ ...state, bar: 'lol' }),
     }),
   }),
   selectors: ({ name }) => ({
@@ -61,6 +70,7 @@ function* fetchOrdersSaga(action: any): any {
     // Fake API call delay
     yield sleep(400);
 
+    yield put(duck.actions.fooAction());
     yield put(duck.actions.fetchOrders());
 
     yield put(
