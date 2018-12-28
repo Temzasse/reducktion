@@ -6,6 +6,8 @@ import {
   STATUSES,
 } from './src/reducktion';
 
+// TODO: fix tests related to auto-generated selectors!
+
 describe('fetchable/fetchableAction', () => {
   it('should create fetchable value', () => {
     const f = fetchable([]);

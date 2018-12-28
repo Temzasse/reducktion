@@ -2,7 +2,7 @@
 import { createAction, handleActions } from 'redux-actions';
 
 import {
-  createSelectors,
+  // createSelectors,
   validateDuck,
   handleFetchableAction,
   handleThunks,
@@ -68,13 +68,20 @@ export const createDuck = duck => {
     actions = { ...actions, ...handleThunks(duck.thunks, dependencies) };
   }
 
+  // TODO: remove!
   // Auto-generate initial selectors for each state field
-  let selectors = createSelectors(duck);
+  // let selectors = createSelectors(duck);
+
+  // NOTE: do not create camelcased selectors since
+  // simple `.get` selector is enough!
+  let selectors = {};
 
   // Add selectors defined by user
   if (duck.selectors) {
-    const customSelectors = duck.selectors({ name: duck.name });
-    selectors = { ...selectors, ...customSelectors };
+    selectors = duck.selectors({ name: duck.name });
+    // TODO: remove!
+    // const customSelectors = duck.selectors({ name: duck.name });
+    // selectors = { ...selectors, ...customSelectors };
   }
 
   // Add simple `get` for selecting state fields by name

@@ -12,8 +12,10 @@ declare module 'reducktion' {
     status: STATUSES;
   }
 
-  interface ISelectors {
-    [x: string]: (state: any) => any;
+  type Selector<S> = (state: { [x: string]: S }) => any;
+
+  interface ISelectors<S> {
+    [x: string]: Selector<S>;
   }
 
   interface IThunks {
@@ -53,15 +55,15 @@ declare module 'reducktion' {
 
   // Only include those keys that are present in the action's interface
   type ActionReducers<S, A> = {
-    [K in keyof A]: Reducer<S, any> | FetchableReducers<S>;
-  }
+    [K in keyof A]: Reducer<S, any> | FetchableReducers<S>
+  };
 
   interface DuckDefinition<S, A> {
     name: string;
     inject?: string[];
     state: S;
     actions: ({ initialState }: { initialState: S }) => ActionReducers<S, A>;
-    selectors?: ({ name }: { name: string }) => ISelectors;
+    selectors?: ({ name }: { name: string }) => ISelectors<S>;
     sagas?: ({ types, deps }: { types: Types<A>; deps: any }) => any[];
     thunks?: IThunks;
     reactions?: (
@@ -74,7 +76,14 @@ declare module 'reducktion' {
     initialState: S;
     types: Types<A>;
     actions: A;
-    selectors: ISelectors;
+    selectors: {
+      // TODO: fix return type...
+      // get: (stateField: keyof S) => (state: { [x: string]: S }) => any;
+      get: (stateField: keyof S) => Selector<S>;
+    } & {
+      // TODO: can we infer the selector names somehow?
+      [x: string]: () => Selector<S>;
+    };
     getSagas: () => any;
     getReducer: () => any;
   }

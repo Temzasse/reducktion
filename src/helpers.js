@@ -1,7 +1,8 @@
 // @ts-check
 import { createAction } from 'redux-actions';
 
-const capitalize = word => word.charAt(0).toUpperCase() + word.slice(1);
+// TODO: remove!
+// const capitalize = word => word.charAt(0).toUpperCase() + word.slice(1);
 
 const isObject = o => typeof o === 'object' && o !== null;
 
@@ -30,11 +31,12 @@ const reduceReducers = (...reducers) => {
   };
 };
 
-export const camelCasedAction = action =>
-  action
-    .toLowerCase()
-    .split('_')
-    .reduce((acc, x, i) => (i === 0 ? acc + x : acc + capitalize(x)), '');
+// TODO: remove!
+// export const camelCasedAction = action =>
+//   action
+//     .toLowerCase()
+//     .split('_')
+//     .reduce((acc, x, i) => (i === 0 ? acc + x : acc + capitalize(x)), '');
 
 export const FETCHABLE_STATUSES = {
   INITIAL: 'INITIAL',
@@ -66,11 +68,13 @@ export const validateDuck = ({ name, state, inject, actions, reactions }) => {
   if (inject) validateInject(inject);
 };
 
-export const createSelectors = duck =>
-  Object.keys(duck.state).reduce((acc, key) => {
-    acc[`get${capitalize(key)}`] = state => state[duck.name][key];
-    return acc;
-  }, {});
+// TODO: remove -> make the API area smaller!
+// This is not needed since we have `.get` selector
+// export const createSelectors = duck =>
+//   Object.keys(duck.state).reduce((acc, key) => {
+//     acc[`get${capitalize(key)}`] = state => state[duck.name][key];
+//     return acc;
+//   }, {});
 
 export const handleThunks = (thunks, dependencies) =>
   Object.entries(thunks).reduce((acc, [actionName, thunk]) => {
