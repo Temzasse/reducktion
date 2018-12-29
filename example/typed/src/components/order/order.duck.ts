@@ -2,9 +2,9 @@ import { takeEvery, put, select } from 'redux-saga/effects';
 import { createDuck, fetchableAction, fetchable } from 'reducktion';
 
 import { sleep } from '../../helpers';
-import { IState, IActions, IOrder, FetchableOrders } from './order.types';
+import { IState, IActions, ISelectors, IOrder, FetchableOrders } from './order.types';
 
-const duck = createDuck<IState, IActions>({
+const duck = createDuck<IState, IActions, ISelectors>({
   name: 'order',
   state: {
     foo: 1,
@@ -24,7 +24,7 @@ const duck = createDuck<IState, IActions>({
   }),
   selectors: ({ name }) => ({
     getFoo: state => state[name].foo,
-    getOrders: state => state[name].orders.data,
+    getOrdersCustom: state => state[name].orders.data,
     getBarYeyd: state => {
       const x = 'yey';
       return `${state[name].bar}-${x}`;
@@ -41,7 +41,7 @@ function* fetchOrdersSaga(action: any): any {
     const orders1: FetchableOrders = yield select(duck.selectors.get('orders'));
 
     // Or use a custom selector to get the data field directly
-    const orders2: IOrder[] = yield select(duck.selectors.getOrders());
+    const orders2: IOrder[] = yield select(duck.selectors.getFoo);
 
     console.log({ orders1, orders2 });
 

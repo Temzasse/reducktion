@@ -26,3 +26,9 @@ export interface IState {
   orders: IFetchable<IOrder[]>;
   packages: IFetchable<IPackage[]>;
 }
+
+export interface ISelectors {
+  getFoo: (state: { [x: string]: IState }) => any;
+  getOrdersCustom: (state: { [x: string]: IState }) => any;
+  getBarYeyd: (state: { [x: string]: IState }) => any;
+}

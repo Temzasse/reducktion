@@ -12,7 +12,7 @@ declare module 'reducktion' {
     status: STATUSES;
   }
 
-  type Selector<S> = (state: { [x: string]: S }) => any;
+  type Selector<S> = (state: { [x: string]: S }, ...args: any[]) => any;
 
   interface ISelectors<S> {
     [x: string]: Selector<S>;
@@ -58,12 +58,13 @@ declare module 'reducktion' {
     [K in keyof A]: Reducer<S, any> | FetchableReducers<S>
   };
 
-  interface DuckDefinition<S, A> {
+  interface DuckDefinition<S, A, SE> {
     name: string;
     inject?: string[];
     state: S;
     actions: ({ initialState }: { initialState: S }) => ActionReducers<S, A>;
-    selectors?: ({ name }: { name: string }) => ISelectors<S>;
+    // selectors?: ({ name }: { name: string }) => ISelectors<S>;
+    selectors?: ({ name }: { name: string }) => SE;
     sagas?: ({ types, deps }: { types: Types<A>; deps: any }) => any[];
     thunks?: IThunks;
     reactions?: (
@@ -71,24 +72,21 @@ declare module 'reducktion' {
     ) => Reducer<S, any>;
   }
 
-  interface Duck<S, A> {
+  interface Duck<S, A, SE> {
     name: string;
     initialState: S;
     types: Types<A>;
     actions: A;
-    selectors: {
-      // TODO: fix return type...
-      // get: (stateField: keyof S) => (state: { [x: string]: S }) => any;
-      get: (stateField: keyof S) => Selector<S>;
-    } & {
-      // TODO: can we infer the selector names somehow?
-      [x: string]: () => Selector<S>;
+    selectors: { [K in keyof SE]: Selector<S> } & {
+      get: (stateField: keyof S) => Selector<S>; // TODO: fix return type...
     };
     getSagas: () => any;
     getReducer: () => any;
   }
 
-  export function createDuck<S, A>(df: DuckDefinition<S, A>): Duck<S, A>;
+  export function createDuck<S, A, SE = ISelectors<S>>(
+    df: DuckDefinition<S, A, SE>
+  ): Duck<S, A, SE>;
 
   interface IAllReducers {
     [x: string]: Reducer<any, any>;
@@ -101,7 +99,7 @@ declare module 'reducktion' {
     [x: string]: any; // Ducks by name - TODO: fix!
   }
 
-  export function initDucks(ducks: Duck<any, any>[]): InitedDucks;
+  export function initDucks(ducks: Duck<any, any, any>[]): InitedDucks;
 
   export function fetchableAction<S, K extends keyof S>(
     // Make sure state field is for a fetchable value
