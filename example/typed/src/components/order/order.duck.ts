@@ -1,10 +1,39 @@
 import { takeEvery, put, select } from 'redux-saga/effects';
-import { createDuck, fetchableAction, fetchable } from 'reducktion';
+
+import {
+  createDuck,
+  fetchableAction,
+  fetchable,
+  Fetchable,
+  FetchableAction,
+} from 'reducktion';
 
 import { sleep } from '../../helpers';
-import { IState, IActions, ISelectors, IOrder, FetchableOrders } from './order.types';
 
-const duck = createDuck<IState, IActions, ISelectors>({
+export interface Order {
+  id: number;
+  name: string;
+}
+
+export interface Package {
+  name: string;
+}
+
+export interface State {
+  foo: number;
+  bar: string;
+  orders: Fetchable<Order[]>;
+  packages: Fetchable<Package[]>;
+}
+
+export interface Actions {
+  fetchOrders: FetchableAction<Order[]>;
+  fetchPackages: FetchableAction<Package[]>;
+  fooAction: (lol: number) => any;
+  lolAction: (lol: number) => any;
+}
+
+const duck = createDuck<State, Actions>({
   name: 'order',
   state: {
     foo: 1,
@@ -14,12 +43,17 @@ const duck = createDuck<IState, IActions, ISelectors>({
   },
   actions: ({ initialState }) => ({
     // Basic actions
-    fooAction: state => ({ ...state, foo: initialState.foo + 1 }),
+    fooAction: (state, action: { payload: number }) => ({
+      ...state,
+      foo: action.payload,
+    }),
+    lolAction: state => ({ ...state }),
+
     // Fetchable actions
     fetchPackages: fetchableAction('packages'),
     fetchOrders: fetchableAction('orders', {
       // Define custom reducer for loading status
-      loading: state => ({ ...state, bar: 'lol' }),
+      loading: state => ({ ...state, bar: state.bar }),
     }),
   }),
   selectors: ({ name }) => ({
@@ -33,22 +67,24 @@ const duck = createDuck<IState, IActions, ISelectors>({
   sagas: ({ types }) => [takeEvery(types.fetchOrders, fetchOrdersSaga)],
 });
 
+// duck.actions as Actions;
+
 // Saga handlers
 function* fetchOrdersSaga(action: any): any {
   console.log({ action });
   try {
     // Select the fetchable value
-    const orders1: FetchableOrders = yield select(duck.selectors.get('orders'));
+    const orders1 = yield select(duck.selectors.get('orders'));
 
     // Or use a custom selector to get the data field directly
-    const orders2: IOrder[] = yield select(duck.selectors.getFoo);
+    // const orders2: Order[] = yield select(duck.selectors);
 
-    console.log({ orders1, orders2 });
+    console.log({ orders1 });
 
     // Fake API call delay
     yield sleep(400);
 
-    yield put(duck.actions.fooAction());
+    yield put(duck.actions.fooAction(1));
     yield put(duck.actions.fetchOrders());
 
     yield put(

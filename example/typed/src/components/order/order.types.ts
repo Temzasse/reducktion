@@ -1,34 +1,35 @@
-import { IFetchable, IFetchableAction } from 'reducktion';
+import { Fetchable, FetchableAction } from 'reducktion';
 
 // TODO: not sure if we should have types in a separate file (?)
 // It kindah goes against the modular ducks principles...
 
-export interface IOrder {
+export interface Order {
   id: number;
   name: string;
 }
 
-export interface IPackage {
+export interface Package {
   name: string;
 }
 
-export type FetchableOrders = IFetchable<IOrder[]>;
+export type FetchableOrders = Fetchable<Order[]>;
 
-export interface IActions {
-  fetchOrders: IFetchableAction<IOrder[]>;
-  fetchPackages: IFetchableAction<IPackage[]>;
-  fooAction: () => any;
-}
-
-export interface IState {
+export interface State {
   foo: number;
   bar: string;
-  orders: IFetchable<IOrder[]>;
-  packages: IFetchable<IPackage[]>;
+  orders: Fetchable<Order[]>;
+  packages: Fetchable<Package[]>;
 }
 
-export interface ISelectors {
-  getFoo: (state: { [x: string]: IState }) => any;
-  getOrdersCustom: (state: { [x: string]: IState }) => any;
-  getBarYeyd: (state: { [x: string]: IState }) => any;
+export interface Actions {
+  fetchOrders: FetchableAction<Order[]>;
+  fetchPackages: FetchableAction<Package[]>;
+  fooAction: (lol: number) => any;
+  lolAction: (lol: number) => any;
 }
+
+// export interface Selectors {
+//   getFoo: (state: { [x: string]: State }) => any;
+//   getOrdersCustom: (state: { [x: string]: State }) => any;
+//   getBarYeyd: (state: { [x: string]: State }) => any;
+// }
