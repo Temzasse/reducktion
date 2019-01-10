@@ -1,5 +1,6 @@
 import { takeEvery, put, select } from 'redux-saga/effects';
 import { ThunkDispatch } from 'redux-thunk';
+import { Action } from 'redux';
 
 import {
   createDuck,
@@ -118,9 +119,9 @@ function* fetchOrdersSaga(action: any): any {
 }
 
 function someThunk(arg: any, deps: Deps) {
-  return async (dispatch: any, getState: any) => {
+  return async (dispatch: ThunkDispatch<{}, any, Action>, getState: any) => {
     const state = getState();
-    const isAuthenticated = deps.user.selectors.get('isAuthenticated')(state);
+    let isAuthenticated = deps.user.selectors.get('isAuthenticated')(state);
     console.log({ isAuthenticated, arg });
     await sleep(2000);
     dispatch(duck.actions.lolAction(1));

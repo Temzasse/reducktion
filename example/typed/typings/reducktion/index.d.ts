@@ -72,14 +72,15 @@ declare module 'reducktion' {
     };
   }
 
-  // TODO: fix `get` selector's return value type!
   interface Duck<State, Actions> {
     name: string;
     initialState: State;
     types: ActionTypes<Actions>;
     actions: Actions;
     selectors: {
-      get: (stateField: keyof State) => Selector<State>;
+      get: <K extends keyof State>(
+        stateField: K
+      ) => (state: RootState<State>, ...args: any[]) => Pick<State, K>[K];
     };
     getSagas: () => [];
     getReducer: () => Reducer<any>;
