@@ -1,4 +1,5 @@
 import { takeEvery, put, select } from 'redux-saga/effects';
+import { ThunkDispatch } from 'redux-thunk';
 
 import {
   createDuck,
@@ -9,6 +10,7 @@ import {
 } from 'reducktion';
 
 import { sleep } from '../../helpers';
+import { UserType } from '../user/user.duck';
 
 export interface Order {
   id: number;
@@ -33,8 +35,13 @@ export interface Actions {
   lolAction: (lol: number) => any;
 }
 
-const duck = createDuck<State, Actions>({
+interface Deps {
+  user: UserType;
+}
+
+const duck = createDuck<State, Actions, Deps>({
   name: 'order',
+  inject: ['user'],
   state: {
     foo: 1,
     bar: 'lol',
@@ -47,13 +54,15 @@ const duck = createDuck<State, Actions>({
       ...state,
       foo: action.payload,
     }),
-    lolAction: state => ({ ...state }),
+    lolAction: () => ({ ...initialState }),
 
     // Fetchable actions
     fetchPackages: fetchableAction('packages'),
     fetchOrders: fetchableAction('orders', {
-      // Define custom reducer for loading status
-      loading: state => ({ ...state, bar: state.bar }),
+      // Define custom reducer for different statuses
+      loading: state => ({ ...state, bar: 'loading' }),
+      success: state => ({ ...state, bar: 'success' }),
+      failure: state => ({ ...state, bar: 'failure' }),
     }),
   }),
   selectors: ({ name }) => ({
@@ -64,10 +73,18 @@ const duck = createDuck<State, Actions>({
       return `${state[name].bar}-${x}`;
     },
   }),
-  sagas: ({ types }) => [takeEvery(types.fetchOrders, fetchOrdersSaga)],
+  thunks: {
+    someThunk,
+  },
+  reactions: ({ deps, initialState }) => ({
+    [deps.user.types.isAuthenticated]: state => ({ ...state, bar: '123' }),
+    [deps.user.types.logout]: () => ({ ...initialState }),
+  }),
+  sagas: ({ types, deps }) => [
+    takeEvery(types.fetchOrders, fetchOrdersSaga),
+    takeEvery(deps.user.types.fetchUser, fetchOrdersSaga),
+  ],
 });
-
-// duck.actions as Actions;
 
 // Saga handlers
 function* fetchOrdersSaga(action: any): any {
@@ -98,6 +115,16 @@ function* fetchOrdersSaga(action: any): any {
   } catch (error) {
     yield put(duck.actions.fetchOrders.fail('Could not load orders!'));
   }
+}
+
+function someThunk(arg: any, deps: Deps) {
+  return async (dispatch: any, getState: any) => {
+    const state = getState();
+    const isAuthenticated = deps.user.selectors.get('isAuthenticated')(state);
+    console.log({ isAuthenticated, arg });
+    await sleep(2000);
+    dispatch(duck.actions.lolAction(1));
+  };
 }
 
 export default duck;

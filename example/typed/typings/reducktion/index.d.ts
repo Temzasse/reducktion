@@ -12,18 +12,14 @@ declare module 'reducktion' {
     status: STATUSES;
   }
 
-  interface FullState<StatePart> {
+  interface RootState<StatePart> {
     [statePart: string]: StatePart;
   }
 
-  type Selector<State> = (state: FullState<State>, ...args: any[]) => any;
+  type Selector<State> = (state: RootState<State>, ...args: any[]) => any;
 
-  interface Selectors<State> {
-    [selectorName: string]: Selector<State>;
-  }
-
-  interface Thunks {
-    [thunkName: string]: (args: any, deps?: any) => any;
+  interface Dependencies {
+    [depName: string]: Duck<any, any>;
   }
 
   // Provide action keys for auto-complete but allow custom types
@@ -45,6 +41,10 @@ declare module 'reducktion' {
 
   type ActionCreator<Payload = any> = (payload?: Payload) => Action<Payload>;
 
+  interface ActionsDict {
+    [actionName: string]: ActionCreator;
+  }
+
   interface FetchableReducers<State> {
     loading: Reducer<State>;
     success: Reducer<State>;
@@ -57,25 +57,34 @@ declare module 'reducktion' {
     success: ActionCreator<SuccessData>;
   }
 
-  // Only include those keys that are present in the action's interface
-  // TODO: figure out how to show proper error if given action is not in keyof Actions
-  type ActionReducers<State, Actions> = {
-    [K in keyof Actions]: Reducer<State> | FetchableReducers<State>
-  };
+  type Thunk<Deps> = (
+    arg: any,
+    deps: Deps
+  ) => (dispatch: any, getState: () => any, ...args: any[]) => Promise<void>;
 
-  interface DuckDefinition<State, Actions> {
+  interface DuckDefinition<State, Actions, Deps> {
     name: string;
     inject?: string[];
     state: State;
+    // Only include those keys that are present in the action's interface
+    // TODO: figure out how to show proper error if given action is not in keyof Actions
     actions: (
       { initialState }: { initialState: State }
-    ) => ActionReducers<State, Actions>;
-    selectors?: ({ name }: { name: string }) => Selectors<State>;
-    sagas?: ({ types, deps }: { types: Types<Actions>; deps: any }) => any[];
-    thunks?: Thunks;
+    ) => { [K in keyof Actions]: Reducer<State> | FetchableReducers<State> };
+    selectors?: (
+      { name }: { name: string }
+    ) => {
+      [selectorName: string]: Selector<State>;
+    };
+    sagas?: ({ types, deps }: { types: Types<Actions>; deps: Deps }) => any[];
+    thunks?: {
+      [thunkName: string]: Thunk<Deps>;
+    };
     reactions?: (
-      { initialState, deps }: { initialState: State; deps: any }
-    ) => Reducer<State>;
+      { initialState, deps }: { initialState: State; deps: Deps }
+    ) => {
+      [depType: string]: Reducer<State>;
+    };
   }
 
   interface Duck<State, Actions> {
@@ -91,8 +100,8 @@ declare module 'reducktion' {
     getReducer: () => any;
   }
 
-  export function createDuck<State, Actions>(
-    df: DuckDefinition<State, Actions>
+  export function createDuck<State, Actions, Deps = Dependencies>(
+    df: DuckDefinition<State, Actions, Deps>
   ): Duck<State, Actions>;
 
   interface IAllReducers {
