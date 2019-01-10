@@ -28,7 +28,7 @@ declare module 'reducktion' {
     [x: string]: string;
   };
 
-  interface Action<Payload = any> {
+  interface ActionCreator<Payload = any> {
     type: string;
     payload: Payload;
     [x: string]: any; // Allow additional meta fields
@@ -36,13 +36,13 @@ declare module 'reducktion' {
 
   type Reducer<State, Payload = any> = (
     state: State,
-    action: Action<Payload>
+    action: ActionCreator<Payload>
   ) => State;
 
-  type ActionCreator<Payload = any> = (payload?: Payload) => Action<Payload>;
+  type ActionFunc<Payload = any> = (payload?: Payload) => ActionCreator<Payload>;
 
   interface ActionsDict {
-    [actionName: string]: ActionCreator;
+    [actionName: string]: ActionFunc;
   }
 
   interface FetchableReducers<State> {
@@ -51,10 +51,10 @@ declare module 'reducktion' {
     failure: Reducer<State>;
   }
 
-  export interface FetchableAction<SuccessData> extends ActionCreator {
-    init: ActionCreator;
-    fail: ActionCreator;
-    success: ActionCreator<SuccessData>;
+  export interface FetchableAction<SuccessData> extends ActionFunc {
+    init: ActionFunc;
+    fail: ActionFunc;
+    success: ActionFunc<SuccessData>;
   }
 
   type Thunk<Deps> = (
@@ -117,10 +117,9 @@ declare module 'reducktion' {
 
   export function initDucks(ducks: Duck<any, any>[]): InitedDucks;
 
-  // TODO: Make sure state field is for a fetchable value!
   export function fetchableAction<State, K extends keyof State>(
-    stateField: keyof State,
-    // stateField: State[K] extends Fetchable ? K : never,
+    // Only allow state fields for fetchable values
+    stateField: Fetchable extends State[K] ? K : never,
     customReducers?: Partial<FetchableReducers<State>>
   ): FetchableReducers<State>;
 
