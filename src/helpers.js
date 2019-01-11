@@ -119,10 +119,10 @@ const createFetchableReducers = ({ types, successField, overrides }) => {
   if (!isObject(overrides)) return defaultReducers;
 
   // Apply possible overrides
-  return Object.values(types).reduce((acc, t) => {
-    acc[t] = overrides[t]
-      ? reduceReducers(defaultReducers[t], overrides[t])
-      : defaultReducers[t];
+  return Object.entries(types).reduce((acc, [k, v]) => {
+    acc[v] = overrides[k]
+      ? reduceReducers(defaultReducers[v], overrides[k])
+      : defaultReducers[v];
     return acc;
   }, {});
 };
