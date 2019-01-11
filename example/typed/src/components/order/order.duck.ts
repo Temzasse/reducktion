@@ -12,15 +12,7 @@ import {
 
 import { sleep } from '../../helpers';
 import { UserType } from '../user/user.duck';
-
-export interface Order {
-  id: number;
-  name: string;
-}
-
-export interface Package {
-  name: string;
-}
+import { Order, Package } from './order.types';
 
 export interface State {
   foo: number;
@@ -83,7 +75,7 @@ const duck = createDuck<State, Actions, Deps>({
   }),
   sagas: ({ types, deps }) => [
     takeEvery(types.fetchOrders, fetchOrdersSaga),
-    takeEvery(deps.user.types.fetchUser, fetchOrdersSaga),
+    takeEvery(deps.user.types.login, fetchOrdersSaga),
   ],
 });
 
@@ -100,10 +92,9 @@ function* fetchOrdersSaga(action: any): any {
     console.log({ orders1 });
 
     // Fake API call delay
-    yield sleep(400);
+    yield sleep(2000);
 
     yield put(duck.actions.fooAction(1));
-    yield put(duck.actions.fetchOrders());
 
     yield put(
       duck.actions.fetchOrders.success([
@@ -121,11 +112,13 @@ function* fetchOrdersSaga(action: any): any {
 function someThunk(arg: any, deps: Deps) {
   return async (dispatch: ThunkDispatch<{}, any, Action>, getState: any) => {
     const state = getState();
-    let isAuthenticated = deps.user.selectors.get('isAuthenticated')(state);
+    const isAuthenticated = deps.user.selectors.get('isAuthenticated')(state);
     console.log({ isAuthenticated, arg });
     await sleep(2000);
     dispatch(duck.actions.lolAction(1));
   };
 }
+
+export type OrderType = typeof duck;
 
 export default duck;

@@ -1,15 +1,20 @@
-import React, { Component } from 'react';
+import * as React from 'react';
 import styled from 'styled-components';
 
 import OrderExample from './components/order';
+import UserExample from './components/user';
 
-class App extends Component {
+class App extends React.Component {
   render() {
     return (
         <AppContainer>
           <Container>
             <Section>
               <OrderExample />
+            </Section>
+
+            <Section>
+              <UserExample />
             </Section>
           </Container>
         </AppContainer>

@@ -6,8 +6,9 @@ import thunk from 'redux-thunk';
 import { initDucks } from 'reducktion';
 
 import orderDucks from './components/order/order.duck';
+import userDucks from './components/user/user.duck';
 
-const ducks = initDucks([orderDucks]);
+const ducks = initDucks([orderDucks, userDucks]);
 const rootReducer = combineReducers(ducks.allReducers);
 
 // Start all sagas
