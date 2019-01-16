@@ -95,27 +95,18 @@ describe('createDuck', () => {
   });
 
   describe('selectors', () => {
-    it('should have generated selectors after creation', () => {
-      const duck = createDuck({
-        name: 'test',
-        state: { field1: 1, field2: 2 },
-        actions: () => ({ testAction: state => ({ ...state }) }),
-      });
-
-      const testState = { test: { field1: 1, field2: 2 } };
-      expect(duck.selectors.getField1(testState)).toEqual(1);
-      expect(duck.selectors.getField2(testState)).toEqual(2);
-    });
-
     it('should select a state field with `get` helper function', () => {
+      const initialState = { field: 1, another: 2 };
       const duck = createDuck({
         name: 'test',
-        state: { field: 1 },
+        state: initialState,
         actions: () => ({ testAction: state => ({ ...state }) }),
       });
-      const testState = { test: { field: 1 } };
-      const val = duck.selectors.get('field', testState);
-      expect(val).toEqual(1);
+      const testState = { test: initialState };
+      const val1 = duck.selectors.get('field')(testState);
+      const val2 = duck.selectors.get('another')(testState);
+      expect(val1).toEqual(1);
+      expect(val2).toEqual(2);
     });
 
     it('should throw if non-existent key was used for `get` selector', () => {
@@ -125,7 +116,7 @@ describe('createDuck', () => {
         actions: () => ({ testAction: state => ({ ...state }) }),
       });
       expect(() => {
-        duck.selectors.get('wrong', { test: { field: 1 } });
+        duck.selectors.get('wrong')({ test: { field: 1 } });
       }).toThrowError(/select a non-existent field 'wrong'/i);
     });
   });
@@ -207,7 +198,7 @@ describe('createDuck', () => {
 
       const state = { test: { orders } };
 
-      expect(duck.selectors.get('orders', state)).toEqual(orders);
+      expect(duck.selectors.get('orders')(state)).toEqual(orders);
     });
 
     it('should throw if fetchable action has no success field', () => {
@@ -239,7 +230,7 @@ describe('createDuck', () => {
 
       const state = { test: { orders } };
 
-      expect(duck.selectors.get('orders', state).data).toEqual(undefined);
+      expect(duck.selectors.get('orders')(state).data).toEqual(undefined);
     });
   });
 });
@@ -292,7 +283,7 @@ describe('initDucks', () => {
       'toggleNotifications',
     ]);
     expect(Object.keys(settings.selectors).sort()).toEqual(
-      ['get', 'getCustomSelector', 'getNotificationsEnabled'].sort()
+      ['get', 'getCustomSelector'].sort()
     );
     expect(settings.getSagas()).toEqual([]);
   });
