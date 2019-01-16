@@ -673,12 +673,12 @@ const model = createModel({
 Finally, if you are using [props-types](https://github.com/facebook/prop-types) you can define a tiny helper function to add make it easier to add prop types to fetchable values.
 
 ```js
-import { STATUSES } from 'reducktion';
+import { FetchableStatus } from 'reducktion';
 
 // Helper
 const fetchablePropType = (dataPropType, errPropType = PropTypes.string) => {
   return PropTypes.shape({
-    status: PropTypes.oneOf(STATUSES).isRequired,
+    status: PropTypes.oneOf(Object.values(FetchableStatus)).isRequired,
     error: errPropType,
     data: dataPropType,
   }).isRequired;
@@ -693,8 +693,6 @@ const propsTypes = {
 ## API
 
 > TODO: UPDATE API DOCS!
-
-Check out the more detailed [API documentation](API.md).
 
 ## Other similar libraries
 
