@@ -1,8 +1,6 @@
 // @ts-check
 import { createAction } from 'redux-actions';
 
-const capitalize = word => word.charAt(0).toUpperCase() + word.slice(1);
-
 const isObject = o => typeof o === 'object' && o !== null;
 
 const reduceReducers = (...reducers) => {
@@ -30,13 +28,7 @@ const reduceReducers = (...reducers) => {
   };
 };
 
-export const camelCasedAction = action =>
-  action
-    .toLowerCase()
-    .split('_')
-    .reduce((acc, x, i) => (i === 0 ? acc + x : acc + capitalize(x)), '');
-
-export const FETCHABLE_STATUSES = {
+export const FETCHABLE_STATUS = {
   INITIAL: 'INITIAL',
   LOADING: 'LOADING',
   SUCCESS: 'SUCCESS',
@@ -56,21 +48,15 @@ export const validateInject = injected => {
   }
 };
 
-export const validateDuck = ({ name, state, inject, actions, reactions }) => {
-  if (!name) throw Error('Duck should have a name');
+export const validateModel = ({ name, state, inject, actions, reactions }) => {
+  if (!name) throw Error('Model should have a name');
 
   if (state && !actions && !reactions) {
-    throw Error('Duck with state should have reducers');
+    throw Error('Model with state should have reducers');
   }
 
   if (inject) validateInject(inject);
 };
-
-export const createSelectors = duck =>
-  Object.keys(duck.state).reduce((acc, key) => {
-    acc[`get${capitalize(key)}`] = state => state[duck.name][key];
-    return acc;
-  }, {});
 
 export const handleThunks = (thunks, dependencies) =>
   Object.entries(thunks).reduce((acc, [actionName, thunk]) => {
@@ -90,7 +76,7 @@ const createFetchableReducers = ({ types, successField, overrides }) => {
       ...state,
       [successField]: {
         ...state[successField],
-        status: FETCHABLE_STATUSES.LOADING,
+        status: FETCHABLE_STATUS.LOADING,
         error: null,
       },
     }),
@@ -98,7 +84,7 @@ const createFetchableReducers = ({ types, successField, overrides }) => {
       ...state,
       [successField]: {
         data: action.payload,
-        status: FETCHABLE_STATUSES.SUCCESS,
+        status: FETCHABLE_STATUS.SUCCESS,
         error: null,
       },
     }),
@@ -106,7 +92,7 @@ const createFetchableReducers = ({ types, successField, overrides }) => {
       ...state,
       [successField]: {
         ...state[successField],
-        status: FETCHABLE_STATUSES.FAILURE,
+        status: FETCHABLE_STATUS.FAILURE,
         error: action.payload,
       },
     }),
@@ -115,10 +101,10 @@ const createFetchableReducers = ({ types, successField, overrides }) => {
   if (!isObject(overrides)) return defaultReducers;
 
   // Apply possible overrides
-  return Object.values(types).reduce((acc, t) => {
-    acc[t] = overrides[t]
-      ? reduceReducers(defaultReducers[t], overrides[t])
-      : defaultReducers[t];
+  return Object.entries(types).reduce((acc, [k, v]) => {
+    acc[v] = overrides[k]
+      ? reduceReducers(defaultReducers[v], overrides[k])
+      : defaultReducers[v];
     return acc;
   }, {});
 };
@@ -131,8 +117,8 @@ const createFetchableAction = types => {
   return action;
 };
 
-export function handleFetchableAction(args, actionName, duckName) {
-  const typePrefix = `${duckName}/${actionName}`;
+export function handleFetchableAction(args, actionName, modelName) {
+  const typePrefix = `${modelName}/${actionName}`;
 
   const t = {
     loading: typePrefix,
@@ -171,13 +157,3 @@ export const FETCHABLE_ACTION_IDENTIFIER = '__IS_FETCHABLE_ACTION__';
 
 export const isFetchableAction = x =>
   x && Object.prototype.hasOwnProperty.call(x, FETCHABLE_ACTION_IDENTIFIER);
-
-/**
- * Refactor to use `status` instead of separate
- * `isLoading` / `hasError` / `error` boolean flags
- */
-export const API_STATUSES = {
-  LOADING: 'LOADING',
-  FAILURE: 'FAILURE',
-  SUCCESS: 'SUCCESS',
-};

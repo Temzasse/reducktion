@@ -1,6 +1,6 @@
-import { createDuck } from 'reducktion'; // eslint-disable-line
+import { createModel } from 'reducktion'; // eslint-disable-line
 
-const duck = createDuck({
+const model = createModel({
   name: 'settings',
   inject: ['user', 'order'],
   state: {
@@ -32,8 +32,8 @@ const duck = createDuck({
 // Thunks
 function testThunk(arg, { user }) {
   return async dispatch => {
-    dispatch(duck.actions.toggleGps());
-    dispatch(duck.actions.toggleDarkMode());
+    dispatch(model.actions.toggleGps());
+    dispatch(model.actions.toggleDarkMode());
     dispatch(
       user.actions.setProfile({
         name: 'New Profile',
@@ -44,4 +44,4 @@ function testThunk(arg, { user }) {
   };
 }
 
-export default duck;
+export default model;

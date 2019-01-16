@@ -1,5 +1,7 @@
 # API documentation
 
+## NOTE: NOT UP-TO-DATE!
+
 TODO: finish and make clearer!
 
 ## `createDuck(duckDefinition: Object)`

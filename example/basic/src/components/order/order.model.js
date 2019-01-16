@@ -1,25 +1,44 @@
 import { takeEvery, put } from 'redux-saga/effects';
-import { createDuck, fetchableAction, fetchable } from 'reducktion'; // eslint-disable-line
+import { createModel, fetchable } from 'reducktion'; // eslint-disable-line
 import { sleep } from '../../helpers';
 
-const duck = createDuck({
+const model = createModel({
   name: 'order',
   inject: ['user'],
   state: {
-    orders: fetchable([]),
-    packages: fetchable([]),
+    orders: fetchable.value([]),
+    /*
+    {
+      data: [],
+      status: 'INITIAL', LOADING | SUCCESS | FAILURE,
+      error: null,
+    }
+    */
+    packages: fetchable.value([]),
   },
   actions: () => ({
     // Simple way to create action for fetchable data
-    // fetchOrders: fetchableAction('orders'),
+    // fetchOrders: fetchable.action('orders'),
     // You can also define overrides for updating the state in your own way
-    fetchOrders: fetchableAction('orders', {
-      loading: state => ({
-        ...state,
-        foo: 1,
-      }),
+    fetchOrders: fetchable.action('orders', {
+      loading: state => ({ ...state, yolo: 1 }),
+      success: state => ({ ...state, yolo: 2 }),
+      failure: state => ({ ...state, yolo: 3 }),
     }),
-    fetchPackages: fetchableAction('packages'),
+    /*
+    fetchOrders
+    fetchOrders.success(data)
+    fetchOrders.failure(error)
+    fetchOrders.init()
+    */
+
+    // fetchOrders: fetchable.action('orders', {
+    //   loading: state => ({
+    //     ...state,
+    //     foo: 1,
+    //   }),
+    // }),
+    fetchPackages: fetchable.action('packages'),
   }),
   reactions: ({ deps, initialState }) => ({
     // Maybe actually do something meaningful...
@@ -38,6 +57,10 @@ const duck = createDuck({
   ],
 });
 
+/*
+model.selectors.get('orders')
+*/
+
 // Saga handlers
 function* fetchOrdersSaga() {
   try {
@@ -45,7 +68,7 @@ function* fetchOrdersSaga() {
     yield sleep(400);
 
     yield put(
-      duck.actions.fetchOrders.success([
+      model.actions.fetchOrders.success([
         { id: 1, name: 'Mock order 1' },
         { id: 2, name: 'Mock order 2' },
         { id: 3, name: 'Mock order 3' },
@@ -53,19 +76,19 @@ function* fetchOrdersSaga() {
       ])
     );
   } catch (error) {
-    yield put(duck.actions.fetchOrders.fail('Could not load orders!'));
+    yield put(model.actions.fetchOrders.fail('Could not load orders!'));
   }
 }
 
 function* fetchPackagesSaga() {
   try {
-    yield put(duck.actions.fetchPackages()); // start loading
+    yield put(model.actions.fetchPackages()); // start loading
 
     // Fake API call delay
     yield sleep(800);
 
     yield put(
-      duck.actions.fetchPackages.success([
+      model.actions.fetchPackages.success([
         { id: 1, name: 'Mock package 1' },
         { id: 2, name: 'Mock package 2' },
         { id: 3, name: 'Mock package 3' },
@@ -73,8 +96,8 @@ function* fetchPackagesSaga() {
       ])
     );
   } catch (error) {
-    yield put(duck.actions.fetchPackages.fail('Could not load packages!'));
+    yield put(model.actions.fetchPackages.fail('Could not load packages!'));
   }
 }
 
-export default duck;
+export default model;

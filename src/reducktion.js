@@ -2,90 +2,44 @@
 import { createAction, handleActions } from 'redux-actions';
 
 import {
-  createSelectors,
-  validateDuck,
+  validateModel,
   handleFetchableAction,
   handleThunks,
   isFetchableAction,
   FETCHABLE_ACTION_IDENTIFIER,
-  FETCHABLE_STATUSES,
+  FETCHABLE_STATUS,
 } from './helpers';
 
-// TODO: Use TypeScript!
+// Creates a models model and returns chainable functions to define futher props
+export const createModel = model => {
+  validateModel(model);
 
-// JSDoc typedefs
-
-/**
- * @typedef {Object.<string, Function>} Action
- */
-
-/**
- * @typedef {Object.<string, Function>} Selectors
- */
-
-/**
- * @typedef {Object.<string, string>} Types
- */
-
-/**
- * @typedef {Object} DuckDefinition
- * @property {String} name
- * @property {Object} state
- * @property {String[]} inject
- * @property {Function} actions
- * @property {Function} selectors
- * @property {Function} sagas
- */
-
-/**
- * @typedef {Object} Duck
- * @property {Function} _run
- * @property {Function} _fillDeps
- * @property {Boolean} _created
- * @property {Function} getSagas
- * @property {Function} getReducer
- * @property {String} name
- * @property {Action} actions
- * @property {Types} types
- * @property {Selectors} selectors
- * @property {Object.<string, any>} initialState
- */
-
-/**
- * Creates a ducks duck and returns chainable functions to define futher props.
- * @param {string} duckName
- * @param {string[]} typeList
- * @param {Object.<string, any>} duck
- * @returns {Duck}
- */
-export const createDuck = duck => {
-  validateDuck(duck);
-
-  const initialState = { ...duck.state };
+  const initialState = { ...model.state };
   const dependencies = {};
   const types = {};
+
   let reducerHandlers = {};
   let actions = {};
   let reducer;
   let sagas = [];
 
   // Mark injected deps to be filled later
-  if (duck.inject) {
-    duck.inject.forEach(depName => {
+  if (model.inject) {
+    model.inject.forEach(depName => {
       dependencies[depName] = null;
     });
   }
 
-  // Create types, actions and reducer handlers from `duck.actions`
+  // Create types, actions and reducer handlers from `model.actions`
   // We need to provide `initialState` since it might be used in reducers
-  Object.entries(duck.actions({ initialState })).forEach(
+  Object.entries(model.actions({ initialState })).forEach(
     ([actionName, reducerHandler]) => {
       if (isFetchableAction(reducerHandler)) {
         // Handle async API actions
         const fetchableX = handleFetchableAction(
           reducerHandler.args,
           actionName,
-          duck.name
+          model.name
         );
 
         // Inline fetchable types
@@ -97,7 +51,7 @@ export const createDuck = duck => {
         reducerHandlers = { ...reducerHandlers, ...fetchableX.reducers };
       } else {
         // Register action type
-        const actionType = `${duck.name}/${actionName}`;
+        const actionType = `${model.name}/${actionName}`;
         types[actionName] = actionType;
 
         // Create basic action
@@ -110,22 +64,20 @@ export const createDuck = duck => {
   );
 
   // Handle thunks
-  if (duck.thunks) {
-    actions = { ...actions, ...handleThunks(duck.thunks, dependencies) };
+  if (model.thunks) {
+    actions = { ...actions, ...handleThunks(model.thunks, dependencies) };
   }
 
-  // Auto-generate initial selectors for each state field
-  let selectors = createSelectors(duck);
+  let selectors = {};
 
   // Add selectors defined by user
-  if (duck.selectors) {
-    const customSelectors = duck.selectors({ name: duck.name });
-    selectors = { ...selectors, ...customSelectors };
+  if (model.selectors) {
+    selectors = model.selectors({ name: model.name });
   }
 
   // Add simple `get` for selecting state fields by name
-  const getSelector = (key, state) => {
-    const statePart = state[duck.name];
+  const getSelector = key => state => {
+    const statePart = state[model.name];
 
     if (!Object.prototype.hasOwnProperty.call(statePart, key)) {
       throw Error(
@@ -138,10 +90,7 @@ export const createDuck = duck => {
 
   selectors = { ...selectors, get: getSelector };
 
-  /**
-   * Fills in the dependencies that were requested when calling inject.
-   * @param {Object.<string, Duck>} deps
-   */
+  // Fills in the dependencies that were requested when calling inject.
   const _fillDeps = deps => {
     Object.keys(dependencies).forEach(dep => {
       if (deps[dep]) {
@@ -153,44 +102,36 @@ export const createDuck = duck => {
         };
       } else {
         throw Error(
-          `There is no dependendy called '${dep}' for ${duck.name} duck.` // eslint-disable-line
+          `There is no dependendy called '${dep}' for ${model.name} model.` // eslint-disable-line
         );
       }
     });
   };
 
-  /**
-   * Run reducer and sagas functions with the necessary data.
-   */
+  // Run reducer and sagas functions with the necessary data.
   const _run = () => {
-    // Run duck reactions function to get rest of the reducer
-    if (duck.reactions) {
-      const fromDeps = duck.reactions({ initialState, deps: dependencies });
+    // Run model reactions function to get rest of the reducer
+    if (model.reactions) {
+      const fromDeps = model.reactions({ initialState, deps: dependencies });
       reducerHandlers = { ...reducerHandlers, ...fromDeps };
     }
 
     reducer = handleActions(reducerHandlers, initialState);
 
-    if (duck.sagas) {
-      sagas = duck.sagas({ types, deps: dependencies });
+    if (model.sagas) {
+      sagas = model.sagas({ types, deps: dependencies });
     }
   };
 
-  /**
-   * Get reducer for the duck.
-   * @returns {Function}
-   */
+  // Get reducer for the model.
   const getReducer = () => reducer;
 
-  /**
-   * Get sagas for the duck.
-   * @returns {Array}
-   */
+  // Get sagas for the model.
   const getSagas = () => sagas;
 
   return {
-    name: duck.name,
-    initialState: duck.state,
+    name: model.name,
+    initialState: model.state,
     types,
     actions,
     selectors,
@@ -201,56 +142,53 @@ export const createDuck = duck => {
   };
 };
 
-/**
- * Create ducks.
- * @param {Duck[]} ducks
- * @returns {Object.<string, Duck>}
- */
-export const initDucks = (ducks = []) => {
-  const ducksByName = ducks.reduce((acc, val) => {
+// Create the final models with dependencies injected
+export const initModels = (models = []) => {
+  const modelsByName = models.reduce((acc, val) => {
     acc[val.name] = val;
     return acc;
   }, {});
 
   // @ts-ignore
-  Object.values(ducksByName).forEach(duck => {
-    duck._fillDeps(ducksByName);
-    duck._run();
+  Object.values(modelsByName).forEach(model => {
+    model._fillDeps(modelsByName);
+    model._run();
 
     // Users don't need these props so delete them
-    delete duck._fillDeps;
-    delete duck._run;
+    delete model._fillDeps;
+    delete model._run;
   });
 
   const getAllReducers = () =>
-    Object.values(ducksByName).reduce((acc, val) => {
+    Object.values(modelsByName).reduce((acc, val) => {
       acc[val.name] = val.getReducer();
       return acc;
     }, {});
 
   const getAllSagas = () =>
-    Object.values(ducksByName).reduce(
+    Object.values(modelsByName).reduce(
       (acc, val) => acc.concat(...val.getSagas()),
       []
     );
 
   return {
-    ...ducksByName,
+    ...modelsByName,
     allReducers: getAllReducers(),
     allSagas: getAllSagas(),
   };
 };
 
-export const STATUSES = FETCHABLE_STATUSES;
+export const FetchableStatus = FETCHABLE_STATUS;
 
-// Description of a fetchable action
-export const fetchableAction = (...args) => ({
-  [FETCHABLE_ACTION_IDENTIFIER]: true,
-  args,
-});
+export const fetchable = {
+  value: initialValue => ({
+    data: initialValue,
+    status: FETCHABLE_STATUS.INITIAL,
+    error: null,
+  }),
 
-export const fetchable = initialValue => ({
-  data: initialValue,
-  status: FETCHABLE_STATUSES.INITIAL,
-  error: null,
-});
+  action: (...args) => ({
+    [FETCHABLE_ACTION_IDENTIFIER]: true,
+    args,
+  }),
+};

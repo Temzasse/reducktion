@@ -1,24 +1,25 @@
 import {
-  createDuck,
-  initDucks,
+  createModel,
+  initModels,
   fetchable,
-  fetchableAction,
-  STATUSES,
+  FetchableStatus,
 } from './src/reducktion';
 
-describe('fetchable/fetchableAction', () => {
+// TODO: fix tests related to auto-generated selectors!
+
+describe('fetchable/fetchable.action', () => {
   it('should create fetchable value', () => {
-    const f = fetchable([]);
+    const f = fetchable.value([]);
     expect(f.data).toEqual([]);
-    expect(f.status).toEqual(STATUSES.INITIAL);
+    expect(f.status).toEqual(FetchableStatus.INITIAL);
     expect(f.error).toEqual(null);
   });
 
   it('should create description of fetchable action', () => {
-    const fa = fetchableAction('orders');
+    const fa = fetchable.action('orders');
     expect(fa.args).toEqual(['orders']);
 
-    const fa2 = fetchableAction('orders', {
+    const fa2 = fetchable.action('orders', {
       loading: state => ({ ...state, some: 1 }),
     });
     expect(fa2.args[0]).toEqual('orders');
@@ -26,16 +27,16 @@ describe('fetchable/fetchableAction', () => {
   });
 });
 
-describe('createDuck', () => {
-  it('should create a duck', () => {
-    const duck = createDuck({
+describe('createModel', () => {
+  it('should create a model', () => {
+    const model = createModel({
       name: 'test',
       state: { field: 1 },
       actions: () => ({
         doSomething: state => ({ ...state, field: state.field + 1 }),
       }),
     });
-    expect(Object.keys(duck).sort()).toEqual(
+    expect(Object.keys(model).sort()).toEqual(
       [
         'name',
         'types',
@@ -52,19 +53,19 @@ describe('createDuck', () => {
 
   it('should throw if no name is defined', () => {
     expect(() => {
-      createDuck({});
-    }).toThrowError(/duck should have a name/i);
+      createModel({});
+    }).toThrowError(/model should have a name/i);
   });
 
   it('should throw if state is defined but no reducers are defined', () => {
     expect(() => {
-      createDuck({ name: 'test', state: { field: 1 } });
-    }).toThrowError(/duck with state should have reducers/i);
+      createModel({ name: 'test', state: { field: 1 } });
+    }).toThrowError(/model with state should have reducers/i);
   });
 
   describe('actions', () => {
     it('should have generated action types after creation', () => {
-      const duck = createDuck({
+      const model = createModel({
         name: 'test',
         state: {},
         actions: () => ({
@@ -72,14 +73,14 @@ describe('createDuck', () => {
           testAction2: undefined, // does not mutate state
         }),
       });
-      expect(duck.types).toEqual({
+      expect(model.types).toEqual({
         testAction1: 'test/testAction1',
         testAction2: 'test/testAction2',
       });
     });
 
     it('should have generated actions after creation', () => {
-      const duck = createDuck({
+      const model = createModel({
         name: 'test',
         state: {},
         actions: () => ({
@@ -87,63 +88,54 @@ describe('createDuck', () => {
           testAction2: undefined, // does not mutate state
         }),
       });
-      expect(duck.actions.testAction1()).toEqual({ type: 'test/testAction1' });
-      expect(duck.actions.testAction2()).toEqual({ type: 'test/testAction2' });
+      expect(model.actions.testAction1()).toEqual({ type: 'test/testAction1' });
+      expect(model.actions.testAction2()).toEqual({ type: 'test/testAction2' });
     });
   });
 
   describe('selectors', () => {
-    it('should have generated selectors after creation', () => {
-      const duck = createDuck({
-        name: 'test',
-        state: { field1: 1, field2: 2 },
-        actions: () => ({ testAction: state => ({ ...state }) }),
-      });
-
-      const testState = { test: { field1: 1, field2: 2 } };
-      expect(duck.selectors.getField1(testState)).toEqual(1);
-      expect(duck.selectors.getField2(testState)).toEqual(2);
-    });
-
     it('should select a state field with `get` helper function', () => {
-      const duck = createDuck({
+      const initialState = { field: 1, another: 2 };
+      const model = createModel({
         name: 'test',
-        state: { field: 1 },
+        state: initialState,
         actions: () => ({ testAction: state => ({ ...state }) }),
       });
-      const testState = { test: { field: 1 } };
-      const val = duck.selectors.get('field', testState);
-      expect(val).toEqual(1);
+      const testState = { test: initialState };
+      const val1 = model.selectors.get('field')(testState);
+      const val2 = model.selectors.get('another')(testState);
+      expect(val1).toEqual(1);
+      expect(val2).toEqual(2);
     });
 
     it('should throw if non-existent key was used for `get` selector', () => {
-      const duck = createDuck({
+      const model = createModel({
         name: 'test',
         state: { field: 1 },
         actions: () => ({ testAction: state => ({ ...state }) }),
       });
       expect(() => {
-        duck.selectors.get('wrong', { test: { field: 1 } });
+        model.selectors.get('wrong')({ test: { field: 1 } });
       }).toThrowError(/select a non-existent field 'wrong'/i);
     });
   });
 
   describe('sagas', () => {
     it('should accept sagas definition function', () => {
-      const duck = createDuck({
+      const model = createModel({
         name: 'test',
         state: { field: 1 },
         actions: () => ({ testAction: state => ({ ...state }) }),
         sagas: () => [],
       });
-      expect(duck.getSagas()).toBeDefined();
+      expect(model.getSagas()).toBeDefined();
     });
   });
 
   describe('inject', () => {
     it('should throw if inject is not an array of model names', () => {
       expect(() => {
-        createDuck({
+        createModel({
           name: 'test',
           inject: 123,
           state: { field: 1 },
@@ -154,7 +146,7 @@ describe('createDuck', () => {
 
     it('should throw if injected model names are not strings', () => {
       expect(() => {
-        createDuck({
+        createModel({
           name: 'test',
           inject: [123],
           state: { field: 1 },
@@ -167,93 +159,93 @@ describe('createDuck', () => {
   describe('thunks', () => {
     it('should accept thunks', () => {
       const testThunk = () => {};
-      const duck = createDuck({
+      const model = createModel({
         name: 'test',
         state: { field: 1 },
         actions: () => ({ testAction: state => ({ ...state }) }),
         thunks: { testThunk },
       });
-      expect(duck.actions.testThunk).toBeDefined();
+      expect(model.actions.testThunk).toBeDefined();
     });
   });
 
-  describe('fetchableAction', () => {
+  describe('fetchable.action', () => {
     it('should create fetchable actions', () => {
-      const duck = createDuck({
+      const model = createModel({
         name: 'test',
         state: {
-          orders: fetchable([]),
+          orders: fetchable.value([]),
         },
-        actions: () => ({ testAction: fetchableAction('orders') }),
+        actions: () => ({ testAction: fetchable.action('orders') }),
       });
 
-      expect(duck.actions.testAction).toBeDefined();
-      expect(duck.actions.testAction.success).toBeDefined();
-      expect(duck.actions.testAction.fail).toBeDefined();
-      expect(duck.actions.testAction.init).toBeDefined();
+      expect(model.actions.testAction).toBeDefined();
+      expect(model.actions.testAction.success).toBeDefined();
+      expect(model.actions.testAction.fail).toBeDefined();
+      expect(model.actions.testAction.init).toBeDefined();
 
-      expect(duck.types.testAction).toEqual('test/testAction');
-      expect(duck.types.testActionInit).toEqual('test/testAction/init');
-      expect(duck.types.testActionSuccess).toEqual('test/testAction/success');
-      expect(duck.types.testActionFailure).toEqual('test/testAction/failure');
+      expect(model.types.testAction).toEqual('test/testAction');
+      expect(model.types.testActionInit).toEqual('test/testAction/init');
+      expect(model.types.testActionSuccess).toEqual('test/testAction/success');
+      expect(model.types.testActionFailure).toEqual('test/testAction/failure');
 
       const orders = {
         data: [],
-        status: STATUSES.INITIAL,
+        status: FetchableStatus.INITIAL,
         error: null,
       };
 
       const state = { test: { orders } };
 
-      expect(duck.selectors.get('orders', state)).toEqual(orders);
+      expect(model.selectors.get('orders')(state)).toEqual(orders);
     });
 
     it('should throw if fetchable action has no success field', () => {
       expect(() => {
-        createDuck({
+        createModel({
           name: 'test',
           state: {
-            orders: fetchable([]),
+            orders: fetchable.value([]),
           },
-          actions: () => ({ testAction: fetchableAction() }),
+          actions: () => ({ testAction: fetchable.action() }),
         });
       }).toThrowError(/you must provide the name of the field/i);
     });
 
     it('should not require initial data for fetchable', () => {
-      const duck = createDuck({
+      const model = createModel({
         name: 'test',
         state: {
-          orders: fetchable(),
+          orders: fetchable.value(),
         },
-        actions: () => ({ testAction: fetchableAction('orders') }),
+        actions: () => ({ testAction: fetchable.action('orders') }),
       });
 
       const orders = {
         data: undefined,
-        status: STATUSES.INITIAL,
+        status: FetchableStatus.INITIAL,
         error: null,
       };
 
       const state = { test: { orders } };
 
-      expect(duck.selectors.get('orders', state).data).toEqual(undefined);
+      expect(model.selectors.get('orders')(state).data).toEqual(undefined);
     });
   });
 });
 
-describe('initDucks', () => {
-  it('should not return any ducks when no ducks are provided', () => {
-    const ducks = initDucks();
-    expect(Object.keys(ducks).sort()).toEqual(
+describe('initModels', () => {
+  it('should not return any models when no models are provided', () => {
+    const models = initModels();
+    expect(Object.keys(models).sort()).toEqual(
       ['allReducers', 'allSagas'].sort()
     );
   });
 
-  it('should create a duck with correct properties', () => {
+  it('should create a model with correct properties', () => {
     const initialState = { notificationsEnabled: false };
 
-    const duck = createDuck({
+    const model = createModel({
       name: 'settings',
       state: initialState,
       actions: () => ({
@@ -268,7 +260,7 @@ describe('initDucks', () => {
       sagas: () => [],
     });
 
-    const { settings } = initDucks([duck]);
+    const { settings } = initModels([model]);
 
     expect(Object.keys(settings).sort()).toEqual(
       [
@@ -290,34 +282,34 @@ describe('initDucks', () => {
       'toggleNotifications',
     ]);
     expect(Object.keys(settings.selectors).sort()).toEqual(
-      ['get', 'getCustomSelector', 'getNotificationsEnabled'].sort()
+      ['get', 'getCustomSelector'].sort()
     );
     expect(settings.getSagas()).toEqual([]);
   });
 
-  it('should create multiple ducks', () => {
-    const duck1 = createDuck({
+  it('should create multiple models', () => {
+    const model1 = createModel({
       name: 'test1',
       state: {},
       actions: () => ({}),
     });
-    const duck2 = createDuck({
+    const model2 = createModel({
       name: 'test2',
       state: {},
       actions: () => ({}),
     });
-    const ducks = initDucks([duck1, duck2]);
-    expect(ducks.test1).toBeDefined();
-    expect(ducks.test2).toBeDefined();
+    const models = initModels([model1, model2]);
+    expect(models.test1).toBeDefined();
+    expect(models.test2).toBeDefined();
   });
 
-  it('should inject other ducks as dependency', () => {
-    const duck1 = createDuck({
+  it('should inject other models as dependency', () => {
+    const model1 = createModel({
       name: 'test1',
       state: {},
       actions: () => ({ doSomething: undefined }),
     });
-    const duck2 = createDuck({
+    const model2 = createModel({
       name: 'test2',
       inject: ['test1'],
       state: { field: 1 },
@@ -328,17 +320,17 @@ describe('initDucks', () => {
         [deps.test1.types.doSomething]: state => ({ ...state, field: 3 }),
       }),
     });
-    const ducks = initDucks([duck1, duck2]);
-    expect(ducks).toBeDefined();
+    const models = initModels([model1, model2]);
+    expect(models).toBeDefined();
   });
 
   it('should throw error if incorrect dependency name is injected', () => {
-    const duck1 = createDuck({
+    const model1 = createModel({
       name: 'test1',
       state: {},
       actions: () => ({ doSomething: undefined }),
     });
-    const duck2 = createDuck({
+    const model2 = createModel({
       name: 'test2',
       inject: ['test3'],
       state: { field: 1 },
@@ -346,21 +338,21 @@ describe('initDucks', () => {
     });
 
     expect(() => {
-      initDucks([duck1, duck2]);
+      initModels([model1, model2]);
     }).toThrowError(/there is no dependendy called 'test3'/i);
   });
 
   it('should be able to use fetchable action types in reactions', () => {
-    const duck1 = createDuck({
+    const model1 = createModel({
       name: 'test1',
       state: {
-        data: fetchable([]),
+        data: fetchable.value([]),
         isAuthenticated: true,
       },
-      actions: () => ({ testAction: fetchableAction('data') }),
+      actions: () => ({ testAction: fetchable.action('data') }),
     });
 
-    const duck2 = createDuck({
+    const model2 = createModel({
       name: 'test2',
       inject: ['test1'],
       state: { field: 1 },
@@ -386,19 +378,19 @@ describe('initDucks', () => {
       },
     });
 
-    const ducks = initDucks([duck1, duck2]);
+    const models = initModels([model1, model2]);
 
-    expect(ducks).toBeDefined();
+    expect(models).toBeDefined();
   });
 
   it('should accept overrides for fetchable action', () => {
-    const duck = createDuck({
+    const model = createModel({
       name: 'test1',
       state: {
-        orders: fetchable([]),
+        orders: fetchable.value([]),
       },
       actions: () => ({
-        testAction: fetchableAction('orders', {
+        testAction: fetchable.action('orders', {
           loading: state => ({ ...state, some1: 1 }),
           success: state => ({ ...state, some2: 2 }),
           failure: state => ({ ...state, some3: 3 }),
@@ -406,8 +398,8 @@ describe('initDucks', () => {
       }),
     });
 
-    const ducks = initDucks([duck]);
+    const models = initModels([model]);
 
-    expect(ducks.allReducers.test1).toBeDefined();
+    expect(models.allReducers.test1).toBeDefined();
   });
 });

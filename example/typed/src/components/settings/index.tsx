@@ -1,22 +1,21 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 
 import { themed, colors } from '../../theme';
-import settingsDuck from './settings.duck';
+import settingsModel from './settings.model';
 
-class Settings extends Component {
-  static propTypes = {
-    gpsEnabled: PropTypes.bool.isRequired,
-    darkModeEnabled: PropTypes.bool.isRequired,
-    notificationsEnabled: PropTypes.bool.isRequired,
-    toggleNotifications: PropTypes.func.isRequired,
-    toggleGps: PropTypes.func.isRequired,
-    toggleDarkMode: PropTypes.func.isRequired,
-    testThunk: PropTypes.func.isRequired,
-  };
+interface Props {
+  gpsEnabled: boolean;
+  darkModeEnabled: boolean;
+  notificationsEnabled: boolean;
+  toggleNotifications: () => any;
+  toggleGps: () => any;
+  toggleDarkMode: () => any;
+  testThunk: () => any;
+}
 
+class Settings extends Component<Props> {
   render() {
     const {
       gpsEnabled,
@@ -103,15 +102,14 @@ const Button = styled.button`
 
 export default connect(
   state => ({
-    gpsEnabled: settingsDuck.selectors.getGpsEnabled(state),
-    // OR: gpsEnabled: settingsDuck.selectors.get('gpsEnabled', state),
-    darkModeEnabled: settingsDuck.selectors.getDarkModeEnabled(state),
-    notificationsEnabled: settingsDuck.selectors.getNotificationsEnabled(state),
+    gpsEnabled: settingsModel.selectors.get('gpsEnabled')(state),
+    darkModeEnabled: settingsModel.selectors.get('darkModeEnabled')(state),
+    notificationsEnabled: settingsModel.selectors.get('notificationsEnabled')(state),
   }),
   {
-    toggleNotifications: settingsDuck.actions.toggleNotifications,
-    toggleGps: settingsDuck.actions.toggleGps,
-    toggleDarkMode: settingsDuck.actions.toggleDarkMode,
-    testThunk: settingsDuck.actions.testThunk,
+    toggleNotifications: settingsModel.actions.toggleNotifications,
+    toggleGps: settingsModel.actions.toggleGps,
+    toggleDarkMode: settingsModel.actions.toggleDarkMode,
+    testThunk: settingsModel.actions.testThunk,
   }
 )(Settings);
