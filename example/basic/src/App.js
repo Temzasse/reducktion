@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import styled, { ThemeProvider } from 'styled-components';
 
 import { themed, colors } from './theme';
-import settingsDucks from './components/settings/settings.duck';
+import settingsModel from './components/settings/settings.model';
 import SettingsExample from './components/settings';
 import OrderExample from './components/order';
 import UserExample from './components/user';
@@ -77,5 +77,5 @@ const Section = styled.div`
 `;
 
 export default connect(state => ({
-  themeMode: settingsDucks.selectors.getThemeMode(state),
+  themeMode: settingsModel.selectors.getThemeMode(state),
 }))(App);

@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { connect } from 'react-redux';
 import { STATUSES, Fetchable } from 'reducktion';
 
-import orderDucks from './order.duck';
+import orderModels from './order.model';
 import { Order } from './order.types';
 
 class OrderComp extends React.Component<{
@@ -49,9 +49,9 @@ const Orders = styled.ul`
 
 export default connect(
   state => ({
-    orders: orderDucks.selectors.get('orders')(state),
+    orders: orderModels.selectors.get('orders')(state),
   }),
   {
-    fetchOrders: orderDucks.actions.fetchOrders,
+    fetchOrders: orderModels.actions.fetchOrders,
   }
 )(OrderComp);

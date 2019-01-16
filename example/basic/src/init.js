@@ -3,22 +3,22 @@ import { all } from 'redux-saga/effects';
 import createSagaMiddleware from 'redux-saga';
 import logger from 'redux-logger';
 import thunk from 'redux-thunk';
-import { initDucks } from 'reducktion'; // eslint-disable-line
+import { initModels } from 'reducktion'; // eslint-disable-line
 
-import userDucks from './components/user/user.duck';
-import orderDucks from './components/order/order.duck';
-import settingsDucks from './components/settings/settings.duck';
+import userModel from './components/user/user.model';
+import orderModel from './components/order/order.model';
+import settingsModel from './components/settings/settings.model';
 
-const ducks = initDucks([userDucks, orderDucks, settingsDucks]);
-const rootReducer = combineReducers(ducks.allReducers);
+const models = initModels([userModel, orderModel, settingsModel]);
+const rootReducer = combineReducers(models.allReducers);
 
 /*
 Or in a more manual way:
 
-const { user, order, settings } = initDucks([
-  userDucks,
-  orderDucks,
-  settingsDucks,
+const { user, order, settings } = initModels([
+  userModel,
+  orderModel,
+  settingsModel,
 ]);
 
 const rootReducer = combineReducers({
@@ -30,8 +30,8 @@ const rootReducer = combineReducers({
 
 // Start all sagas
 function* rootSaga() {
-  yield all(ducks.allSagas);
-  // yield all([...ducks.user.getSagas(), ...ducks.order.getSagas()]);
+  yield all(models.allSagas);
+  // yield all([...models.user.getSagas(), ...models.order.getSagas()]);
 }
 
 const sagaMiddleware = createSagaMiddleware();

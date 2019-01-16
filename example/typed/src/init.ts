@@ -3,17 +3,17 @@ import { all } from 'redux-saga/effects';
 import createSagaMiddleware from 'redux-saga';
 import logger from 'redux-logger';
 import thunk from 'redux-thunk';
-import { initDucks } from 'reducktion';
+import { initModels } from 'reducktion';
 
-import orderDucks from './components/order/order.duck';
-import userDucks from './components/user/user.duck';
+import orderModel from './components/order/order.model';
+import userModel from './components/user/user.model';
 
-const ducks = initDucks([orderDucks, userDucks]);
-const rootReducer = combineReducers(ducks.allReducers);
+const models = initModels([orderModel, userModel]);
+const rootReducer = combineReducers(models.allReducers);
 
 // Start all sagas
 function* rootSaga(): any {
-  yield all(ducks.allSagas);
+  yield all(models.allSagas);
 }
 
 const sagaMiddleware = createSagaMiddleware();

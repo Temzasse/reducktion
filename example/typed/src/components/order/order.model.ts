@@ -3,7 +3,7 @@ import { ThunkDispatch } from 'redux-thunk';
 import { Action } from 'redux';
 
 import {
-  createDuck,
+  createModel,
   fetchableAction,
   fetchable,
   Fetchable,
@@ -11,7 +11,7 @@ import {
 } from 'reducktion';
 
 import { sleep } from '../../helpers';
-import { UserType } from '../user/user.duck';
+import { UserModel } from '../user/user.model';
 import { Order, Package } from './order.types';
 
 export interface State {
@@ -29,10 +29,10 @@ export interface Actions {
 }
 
 interface Deps {
-  user: UserType;
+  user: UserModel;
 }
 
-const duck = createDuck<State, Actions, Deps>({
+const model = createModel<State, Actions, Deps>({
   name: 'order',
   inject: ['user'],
   state: {
@@ -84,20 +84,20 @@ function* fetchOrdersSaga(action: any): any {
   console.log({ action });
   try {
     // Select the fetchable value
-    const orders1 = yield select(duck.selectors.get('orders'));
+    const orders1 = yield select(model.selectors.get('orders'));
 
     // Or use a custom selector to get the data field directly
-    // const orders2: Order[] = yield select(duck.selectors);
+    // const orders2: Order[] = yield select(model.selectors);
 
     console.log({ orders1 });
 
     // Fake API call delay
     yield sleep(2000);
 
-    yield put(duck.actions.fooAction(1));
+    yield put(model.actions.fooAction(1));
 
     yield put(
-      duck.actions.fetchOrders.success([
+      model.actions.fetchOrders.success([
         { id: 1, name: 'Mock order 1' },
         { id: 2, name: 'Mock order 2' },
         { id: 3, name: 'Mock order 3' },
@@ -105,7 +105,7 @@ function* fetchOrdersSaga(action: any): any {
       ])
     );
   } catch (error) {
-    yield put(duck.actions.fetchOrders.fail('Could not load orders!'));
+    yield put(model.actions.fetchOrders.fail('Could not load orders!'));
   }
 }
 
@@ -115,10 +115,10 @@ function someThunk(arg: any, deps: Deps) {
     const isAuthenticated = deps.user.selectors.get('isAuthenticated')(state);
     console.log({ isAuthenticated, arg });
     await sleep(2000);
-    dispatch(duck.actions.lolAction(1));
+    dispatch(model.actions.lolAction(1));
   };
 }
 
-export type OrderType = typeof duck;
+export type OrderModel = typeof model;
 
-export default duck;
+export default model;

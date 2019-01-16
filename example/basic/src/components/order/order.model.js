@@ -1,8 +1,8 @@
 import { takeEvery, put } from 'redux-saga/effects';
-import { createDuck, fetchableAction, fetchable } from 'reducktion'; // eslint-disable-line
+import { createModel, fetchableAction, fetchable } from 'reducktion'; // eslint-disable-line
 import { sleep } from '../../helpers';
 
-const duck = createDuck({
+const model = createModel({
   name: 'order',
   inject: ['user'],
   state: {
@@ -31,9 +31,6 @@ const duck = createDuck({
     fetchOrders.failure(error)
     fetchOrders.init()
     */
-
-
-
 
     // fetchOrders: fetchableAction('orders', {
     //   loading: state => ({
@@ -71,7 +68,7 @@ function* fetchOrdersSaga() {
     yield sleep(400);
 
     yield put(
-      duck.actions.fetchOrders.success([
+      model.actions.fetchOrders.success([
         { id: 1, name: 'Mock order 1' },
         { id: 2, name: 'Mock order 2' },
         { id: 3, name: 'Mock order 3' },
@@ -79,19 +76,19 @@ function* fetchOrdersSaga() {
       ])
     );
   } catch (error) {
-    yield put(duck.actions.fetchOrders.fail('Could not load orders!'));
+    yield put(model.actions.fetchOrders.fail('Could not load orders!'));
   }
 }
 
 function* fetchPackagesSaga() {
   try {
-    yield put(duck.actions.fetchPackages()); // start loading
+    yield put(model.actions.fetchPackages()); // start loading
 
     // Fake API call delay
     yield sleep(800);
 
     yield put(
-      duck.actions.fetchPackages.success([
+      model.actions.fetchPackages.success([
         { id: 1, name: 'Mock package 1' },
         { id: 2, name: 'Mock package 2' },
         { id: 3, name: 'Mock package 3' },
@@ -99,8 +96,8 @@ function* fetchPackagesSaga() {
       ])
     );
   } catch (error) {
-    yield put(duck.actions.fetchPackages.fail('Could not load packages!'));
+    yield put(model.actions.fetchPackages.fail('Could not load packages!'));
   }
 }
 
-export default duck;
+export default model;

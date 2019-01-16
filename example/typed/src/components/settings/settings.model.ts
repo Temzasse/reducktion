@@ -1,9 +1,9 @@
-import { createDuck } from 'reducktion';
+import { createModel } from 'reducktion';
 import { ThunkDispatch } from 'redux-thunk';
 import { Action } from 'redux';
 
-import { UserType } from '../user/user.duck';
-import { OrderType } from '../order/order.duck';
+import { UserModel } from '../user/user.model';
+import { OrderModel } from '../order/order.model';
 
 interface Actions {
   resetSettings: () => any;
@@ -20,11 +20,11 @@ interface State {
 }
 
 interface Deps {
-  user: UserType;
-  order: OrderType;
+  user: UserModel;
+  order: OrderModel;
 }
 
-const duck = createDuck<State, Actions, Deps>({
+const model = createModel<State, Actions, Deps>({
   name: 'settings',
   inject: ['user', 'order'],
   state: {
@@ -58,8 +58,8 @@ const duck = createDuck<State, Actions, Deps>({
 // Thunks
 function testThunk(arg: any, deps: Deps) {
   return async (dispatch: ThunkDispatch<{}, any, Action>) => {
-    dispatch(duck.actions.toggleGps());
-    dispatch(duck.actions.toggleDarkMode());
+    dispatch(model.actions.toggleGps());
+    dispatch(model.actions.toggleDarkMode());
 
     // Set profile for fun
     dispatch(
@@ -72,4 +72,6 @@ function testThunk(arg: any, deps: Deps) {
   };
 }
 
-export default duck;
+export type SettingsModel = typeof model;
+
+export default model;

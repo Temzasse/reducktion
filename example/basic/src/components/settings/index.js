@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
 import { themed, colors } from '../../theme';
-import settingsDuck from './settings.duck';
+import settingsModel from './settings.model';
 
 class Settings extends Component {
   static propTypes = {
@@ -103,15 +103,15 @@ const Button = styled.button`
 
 export default connect(
   state => ({
-    gpsEnabled: settingsDuck.selectors.getGpsEnabled(state),
-    // OR: gpsEnabled: settingsDuck.selectors.get('gpsEnabled', state),
-    darkModeEnabled: settingsDuck.selectors.getDarkModeEnabled(state),
-    notificationsEnabled: settingsDuck.selectors.getNotificationsEnabled(state),
+    gpsEnabled: settingsModel.selectors.getGpsEnabled(state),
+    // OR: gpsEnabled: settingsModel.selectors.get('gpsEnabled', state),
+    darkModeEnabled: settingsModel.selectors.getDarkModeEnabled(state),
+    notificationsEnabled: settingsModel.selectors.getNotificationsEnabled(state),
   }),
   {
-    toggleNotifications: settingsDuck.actions.toggleNotifications,
-    toggleGps: settingsDuck.actions.toggleGps,
-    toggleDarkMode: settingsDuck.actions.toggleDarkMode,
-    testThunk: settingsDuck.actions.testThunk,
+    toggleNotifications: settingsModel.actions.toggleNotifications,
+    toggleGps: settingsModel.actions.toggleGps,
+    toggleDarkMode: settingsModel.actions.toggleDarkMode,
+    testThunk: settingsModel.actions.testThunk,
   }
 )(Settings);

@@ -5,8 +5,8 @@ import PropTypes from 'prop-types';
 import { STATUSES } from 'reducktion'; // eslint-disable-line
 
 import { fetchablePropType, isLoading } from '../../helpers';
-import orderDucks from './order.duck';
-import settingsDuck from '../settings/settings.duck';
+import orderModels from './order.model';
+import settingsModel from '../settings/settings.model';
 
 class Order extends Component {
   static propTypes = {
@@ -16,7 +16,7 @@ class Order extends Component {
   };
 
   componentDidMount() {
-    // this.props.fetchPackages();
+    this.props.fetchPackages();
   }
 
   render() {
@@ -56,14 +56,14 @@ const Orders = styled.ul`
 
 export default connect(
   state => ({
-    // orders: orderDucks.selectors.getOrders(state),
-    orders: orderDucks.selectors.get('orders', state),
+    // orders: orderModels.selectors.getOrders(state),
+    orders: orderModels.selectors.get('orders', state),
   }),
   {
-    testThunk: settingsDuck.actions.testThunk,
-    fetchOrders: orderDucks.actions.fetchOrders,
+    testThunk: settingsModel.actions.testThunk,
+    fetchOrders: orderModels.actions.fetchOrders,
     // Use `init` action instead of the default action to not start loading
     // automatically when the action is dispatched
-    fetchPackages: orderDucks.actions.fetchPackages.init,
+    fetchPackages: orderModels.actions.fetchPackages.init,
   }
 )(Order);

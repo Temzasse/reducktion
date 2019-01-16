@@ -37,7 +37,7 @@ interface FetchableReducers<State> {
 }
 
 interface Dependencies {
-  [depName: string]: Duck<any, any>;
+  [depName: string]: Model<any, any>;
 }
 
 interface Thunks<Deps> {
@@ -47,7 +47,7 @@ interface Thunks<Deps> {
 // TODO:
 // Figure out how to show proper error
 // if given action is not in keyof Actions
-interface DuckDefinition<State, Actions, Deps> {
+interface ModelDefinition<State, Actions, Deps> {
   name: string;
   inject?: string[];
   state: State;
@@ -73,7 +73,7 @@ interface DuckDefinition<State, Actions, Deps> {
   thunks?: Thunks<Deps>;
 }
 
-interface Duck<State, Actions> {
+interface Model<State, Actions> {
   name: string;
   initialState: State;
   types: ActionTypes<Actions>;
@@ -111,19 +111,19 @@ export interface FetchableAction<SuccessData> extends ActionFunc {
 
 // Exported functions -------------------------------------------------------
 
-export function createDuck<State, Actions, Deps = Dependencies>(
-  df: DuckDefinition<State, Actions, Deps>
-): Duck<State, Actions>;
+export function createModel<State, Actions, Deps = Dependencies>(
+  df: ModelDefinition<State, Actions, Deps>
+): Model<State, Actions>;
 
-export function initDucks(
-  ducks: Duck<any, any>[]
+export function initModels(
+  models: Model<any, any>[]
 ): {
   allReducers: {
     [x: string]: Reducer<any>;
   };
   allSagas: any[];
 } & {
-  [duckName: string]: Duck<any, any>;
+  [modelName: string]: Model<any, any>;
 };
 
 export function fetchableAction<State, K extends keyof State>(

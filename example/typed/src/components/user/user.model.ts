@@ -1,7 +1,7 @@
 import { takeEvery, put, call } from 'redux-saga/effects';
 
 import {
-  createDuck,
+  createModel,
   fetchableAction,
   fetchable,
   Fetchable,
@@ -21,7 +21,7 @@ export interface Actions {
   logout: () => any;
 }
 
-const duck = createDuck<State, Actions>({
+const model = createModel<State, Actions>({
   name: 'user',
   state: {
     profile: fetchable(null),
@@ -52,17 +52,17 @@ function* loginSaga(action: any): any {
     // Fake API call delay
     yield call(sleep, 1000);
     yield put(
-      duck.actions.login.success({
+      model.actions.login.success({
         name: 'Teemu Taskula',
         avatarUrl: 'https://source.unsplash.com/random/100x100',
         githubUrl: 'https://github.com/Temzasse',
       })
     );
   } catch (error) {
-    yield put(duck.actions.login.fail('Failed to login!'));
+    yield put(model.actions.login.fail('Failed to login!'));
   }
 }
 
-export type UserType = typeof duck;
+export type UserModel = typeof model;
 
-export default duck;
+export default model;

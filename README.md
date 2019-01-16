@@ -1,6 +1,6 @@
 <p align='center'>
   <br><br><br>
-  <img src="logo.png" alt="Reducktion logo" width="400"/>
+  <img src="logo.png" alt="reducktion logo" width="400"/>
   <br><br><br>
 <p/>
 
@@ -16,7 +16,7 @@ _A small helper library for Redux to reduce boilerplate and enforce a more modul
 
 ---
 
-Inspiration: [Ducks: Redux Reducer Bundles](https://github.com/erikras/ducks-modular-redux).
+Inspiration: [models: Redux Reducer Bundles](https://github.com/erikras/models-modular-redux).
 
 ---
 
@@ -33,7 +33,7 @@ Inspiration: [Ducks: Redux Reducer Bundles](https://github.com/erikras/ducks-mod
 - [Other similar libraries](#other-similar-libraries)
 - [Caveats](#caveats)
 
-# reduktion
+# reducktion
 
 ![npm](https://img.shields.io/npm/v/reducktion.svg)
 ![Travis (.org) branch](https://img.shields.io/travis/Temzasse/reducktion/master.svg)
@@ -57,22 +57,22 @@ $ yarn add reducktion
 Redux gets it's fair share of critisism for the amount of boilerplate that is usually
 required to setup your action types, action creators, reducers, selectors, async behaviour, etc.
 
-However, in many cases it is possible to avoid this unnecessary boilerplate by rethinking the architecture of your redux entities. One popular approach is so called ducks pattern that combines all the entities into a one file, a duck module. A duck module should only concern one feature of your app. This means that you don't have separate folders or even files for your actions, reducers, sagas etc. instead you split everything by feature so you end up with folders like **user**, **order**, **auth** that encapsulate everything related to that feature.
+However, in many cases it is possible to avoid this unnecessary boilerplate by rethinking the architecture of your redux entities. One popular approach is so called ducks pattern that combines all the entities into a one file, a model module. A model module should only concern one feature of your app. This means that you don't have separate folders or even files for your actions, reducers, sagas etc. instead you split everything by feature so you end up with folders like **user**, **order**, **auth** that encapsulate everything related to that feature.
 
 Reducktion is a customized implementation of the ducks pattern and it aims to help you manage your redux entities
 in a more modular way while providing some additional utilities such as [dependency injection](dependency-injection).
 
 ## Usage
 
-Reducktion minimizes the amount of boilerplate by firstly skipping manually defining action types entirely, and secondly merging actions and reducers together.
+reducktion minimizes the amount of boilerplate by firstly skipping manually defining action types entirely, and secondly merging actions and reducers together.
 
 ```javascript
-// order.duck.js
+// order.model.js
 
-import { createDuck } from 'reducktion';
+import { createModel } from 'reducktion';
 
-export default createDuck({
-  // Name of the duck
+export default createModel({
+  // Name of the model
   name: 'order',
 
   // Initial state
@@ -105,16 +105,24 @@ export default createDuck({
 
 **Okay but wait, where are my selectors?!**
 
-By default reducktion will auto generate selectors based on the field names in your initial state object. Also it provides you a handy helper selector `get` with the fields name if you don't fancy auto-generated selectors.
-
-So, the non-auto-generatad version of the above example would look like this:
+By default reducktion will provide you a handy helper selector creator function `get` if you don't want to manually create your own selector functions.
 
 ```javascript
-// order.duck.js
+const getOrders = model.selectors.get('orders');
+const orders = getOrders(state);
 
-import { createDuck } from 'reducktion';
+// OR simply
+const orders = model.selectors.get('orders')(state);
+```
 
-export default createDuck({
+Creating your own selectors is really easy though:
+
+```javascript
+// order.model.js
+
+import { createModel } from 'reducktion';
+
+export default createModel({
   name: 'order',
   state: {
     orders: [],
@@ -134,25 +142,23 @@ export default createDuck({
 });
 ```
 
-> Auto generating the selectors is merely a nice-to-have convenience that you should not rely on in a bigger application since every time you change your state field name selectors **WILL CHANGE** respectfully! For example if you have a field called `loading` and you change it to `isLoading` the corresponding generated selector will change from `getLoading` to `getIsLoading`. So a more robust option is to define selectors by yourself or use the `get` helper selector.
-
 Finally in the place where you combine your reducers and create the store:
 
 ```javascript
 import { createStore, combineReducers } from 'redux';
-import { initDucks } from 'reducktion';
-import orderDuck from '../order/order.duck';
+import { initModels } from 'reducktion';
+import orderModel from '../order/order.model';
 
-const ducks = initDucks([orderDuck /* other ducks... */]);
-const rootReducer = combineReducers(ducks.allReducers);
+const models = initModels([orderModel /* other models... */]);
+const rootReducer = combineReducers(models.allReducers);
 const store = createStore(rootReducer, initialState);
 ```
 
-Then we can use the duck in a React component.
+Then we can use the model in a React component.
 
 ```javascript
 import { connect } from 'react-redux';
-import orderDuck from './order.duck';
+import orderModel from './order.model';
 
 class SomeComponent extends Component {
   componentDidMount() {
@@ -178,34 +184,34 @@ class SomeComponent extends Component {
 
 export default connect(
   state => ({
-    orders: orderDuck.selectors.getOrders(state),
-    isLoading: orderDuck.selectors.getIsLoading(state),
-    // OR:
-    orders: orderDuck.selectors.get('orders', state),
-    isLoading: orderDuck.selectors.get('isLoading', state),
+    orders: orderModel.selectors.get('orders')(state),
+    isLoading: orderModel.selectors.get('isLoading')(state),
+    // OR if you have defined you own selectors
+    orders: orderModel.selectors.getOrders(state),
+    isLoading: orderModel.selectors.getIsLoading(state),
   }),
   {
-    fetchOrders: orderDuck.actions.fetchOrders,
+    fetchOrders: orderModel.actions.fetchOrders,
   }
 )(SomeComponent);
 ```
 
 That's it!
 
-You have encapsulated the Redux related logic of a feature called `order` into a duck 🦆 👏 🎉
+You have encapsulated the Redux related logic of a feature called `order` into a model that follows the ducks pattern 🦆 👏 🎉
 
 ## Dependency injection
 
-Reducktion can inject other ducks into other ducks so you can easily use them without manually importing the duck file. This fixes potential circular dependency issue between related ducks.
+It is possible to inject models without you having to manually import the model file. This fixes potential circular dependency issue between related models.
 
-You can give any number of duck names to `inject` and they will be provided to the duck inside the various handlers like `actions`, `reactions` or `sagas`.
+You can give any number of model names to `inject` and they will be provided to the model inside the various handlers like `actions`, `reactions` or `sagas`.
 
 In the below example we fetch user's orders after successful login.
 
 ```javascript
-import { createDuck } from 'reducktion';
+import { createModel } from 'reducktion';
 
-const duck = createDuck({
+const model = createModel({
   name: 'order',
   inject: ['user'],
   state: {
@@ -230,10 +236,10 @@ function* fetchOrdersSaga() {
 }
 ```
 
-You can also react to the actions dispatched by any injected ducks and update duck's own state accordingly with the help of `reactions`:
+You can also react to the actions dispatched by any injected models and update model's own state accordingly with the help of `reactions`:
 
 ```js
-createDuck({
+createModel({
   name: 'order',
   inject: ['user'],
   state: {
@@ -254,9 +260,9 @@ createDuck({
 Using [redux-thunk](https://github.com/reduxjs/redux-thunk) is fairly simple: you only need to provide the thunk functions alongside with the other actions.
 
 ```javascript
-import { createDuck } from 'reducktion';
+import { createModel } from 'reducktion';
 
-const duck = createDuck({
+const model = createModel({
   name: 'settings',
   inject: ['user'],
   state: {
@@ -285,11 +291,11 @@ const duck = createDuck({
 function someThunk(args) {
   return async dispatch => {
     await api.doSomeAsyncWork(args);
-    dispatch(duck.actions.toggleDarkMode());
+    dispatch(model.actions.toggleDarkMode());
   };
 }
 
-// Injected ducks are provided as the last argument
+// Injected models are provided as the last argument
 function otherThunkWithInjects(args, deps) {
   return async (dispatch, getState) => {
     const state = getState();
@@ -299,22 +305,22 @@ function otherThunkWithInjects(args, deps) {
   };
 }
 
-export default duck;
+export default model;
 ```
 
 ## Usage with redux-saga
 
-It is also possible to use [redux-saga](https://github.com/redux-saga/redux-saga) with Reducktion by defining the list of saga watchers that should react to corresponding actions.
+It is also possible to use [redux-saga](https://github.com/redux-saga/redux-saga) with reducktion by defining the list of saga watchers that should react to corresponding actions.
 
-Note that Reducktion has no dependency of redux-saga to keep the library size small! So, you need to install redux-saga yourself and import all the helpers you need from it.
+Note that reducktion has no dependency of redux-saga to keep the library size small! So, you need to install redux-saga yourself and import all the helpers you need from it.
 
 Let's look at a simple example:
 
 ```javascript
-import { createDuck } from 'reducktion';
+import { createModel } from 'reducktion';
 import { takeEvery, takeLatest, put, call } from 'redux-saga/effects';
 
-const duck = createDuck({
+const model = createModel({
   name: 'order',
   inject: ['user'],
   state: {
@@ -348,9 +354,9 @@ const duck = createDuck({
 function* fetchOrdersSaga() {
   try {
     const orders = yield call(api.fetchOrders);
-    yield put(duck.actions.receiveOrders(orders));
+    yield put(model.actions.receiveOrders(orders));
   } catch (e) {
-    yield put(duck.actions.failFetchOrders(orders));
+    yield put(model.actions.failFetchOrders(orders));
   }
 }
 
@@ -359,32 +365,32 @@ function* someOtherSaga(deps, action) {
   // do something with the action / deps
 }
 
-export default duck;
+export default model;
 ```
 
-Finally, you need to create the ducks, combine your sagas, and run the root saga.
+Finally, you need to create the models, combine your sagas, and run the root saga.
 
 ```javascript
 import { createStore, applyMiddleware, combineReducers } from 'redux';
 import { all } from 'redux-saga/effects';
 import createSagaMiddleware from 'redux-saga';
-import { initDucks } from 'reducktion';
+import { initModels } from 'reducktion';
 
-import userDuck from '../user/user.duck';
-import orderDuck from '../order/order.duck';
+import userModel from '../user/user.model';
+import orderModel from '../order/order.model';
 
-const ducks = initDucks([userDuck, orderDuck]);
-const rootReducer = combineReducers(ducks.allReducers);
+const models = initModels([userModel, orderModel]);
+const rootReducer = combineReducers(models.allReducers);
 
 // Start all sagas
 function* rootSaga() {
-  yield all(ducks.allSagas);
+  yield all(models.allSagas);
 }
 
 /*
 A more manual way to do the same:
 
-const { user, order } = initDucks([userDuck, orderDuck]);
+const { user, order } = initModels([userModel, orderModel]);
 
 const rootReducer = combineReducers({
   [user.name]: user.getReducer(),
@@ -406,17 +412,16 @@ sagaMiddleware.run(rootSaga);
 
 ## Example with everything
 
-Let's cram all the goodness into a single duck so you can see everything in one place 😎
+Let's cram all the goodness into a single model so you can see everything in one place 😎
 
 ```javascript
-import { createDuck } from 'reducktion';
+import { createModel } from 'reducktion';
 import { takeEvery, takeLatest, put, call } from 'redux-saga/effects';
-
 import { takeEvery, put } from 'redux-saga/effects';
-import { createDuck } from 'reducktion'; // eslint-disable-line
+import { createModel } from 'reducktion'; // eslint-disable-line
 import { sleep } from '../../helpers';
 
-const duck = createDuck({
+const model = createModel({
   name: 'order',
   inject: ['user'],
   state: {
@@ -469,7 +474,7 @@ function archiveOrders(args, deps) {
 function* fetchOrdersSaga() {
   yield sleep(400);
   yield put(
-    duck.actions.receiveOrders([
+    model.actions.receiveOrders([
       { id: 1, name: 'Mock order 1' },
       { id: 2, name: 'Mock order 2' },
       // ...
@@ -477,7 +482,7 @@ function* fetchOrdersSaga() {
   );
 }
 
-export default duck;
+export default model;
 ```
 
 ## Advanced
@@ -492,9 +497,9 @@ Reducktion provides some higher level helpers to make handling any API related a
 Let's first see what we would normally need to create the necessary things for fetching some imaginary **orders** and taking into account the three stages mentioned earlier.
 
 ```js
-import { createDuck } from 'reducktion';
+import { createModel } from 'reducktion';
 
-const duck = createDuck({
+const model = createModel({
   name: 'order',
   state: {
     orders: [],
@@ -526,9 +531,9 @@ const duck = createDuck({
 function* fetchOrdersSaga() {
   try {
     const orders = yield call(api.fetchOrders);
-    yield put(duck.actions.receiveOrders(orders));
+    yield put(model.actions.receiveOrders(orders));
   } catch (error) {
-    yield put(duck.actions.failFetchOrders(error.message));
+    yield put(model.actions.failFetchOrders(error.message));
   }
 }
 ```
@@ -562,36 +567,36 @@ Corresponding generated types are: `types.action`, `types.actionSuccess`, `types
 Example:
 
 ```js
-import { createDuck, fetchable, fetchableAction } from 'reducktion';
+import { createModel, fetchable, fetchableAction } from 'reducktion';
 
-const duck = createDuck({
+const model = createModel({
   name: 'order',
   state: {
     orders: fetchable([]),
-    /*
-    {
-      data: [],
-      status: 'INITIAL',
-      error: null,
-    }
-    */
+    /* This creates the following data structure:
+     * {
+     *   data: [],
+     *   status: 'INITIAL',
+     *   error: null,
+     * }
+     */
   },
   actions: () => ({
     fetchOrders: fetchableAction('orders'),
-    /*
-    fetchOrders()
-    fetchOrders.success()
-    fetchOrders.failure()
-    fetchOrders.init()
+    /* This creates the following actions:
+     * fetchOrders()
+     * fetchOrders.success()
+     * fetchOrders.failure()
+     * fetchOrders.init()
     */
   }),
   sagas: ({ types }) => [
     takeEvery(types.fetchOrders, fetchOrdersSaga),
-    /*
-    types.fetchOrders
-    types.fetchOrdersSuccess
-    types.fetchOrdersFailure
-    types.fetchOrdersInit
+    /* Generated fetchable types:
+     * types.fetchOrders
+     * types.fetchOrdersSuccess
+     * types.fetchOrdersFailure
+     * types.fetchOrdersInit
     */
   ],
 });
@@ -601,20 +606,23 @@ function* fetchOrdersSaga() {
   try {
     // In real world you would fetch orders from some API
     const orders = [];
-    yield put(duck.actions.fetchOrders.success(orders));
+    yield put(model.actions.fetchOrders.success(orders));
   } catch (error) {
-    yield put(duck.actions.fetchOrders.fail(error.message));
+    yield put(model.actions.fetchOrders.fail(error.message));
   }
 }
 
-// And finally in some component you start the fetching flow
+// And finally in some component you connect the action
+connect(mapStateToProps, { fetchOrders: model.actions.fetchOrders });
+
+// Dispatch action inside the component
 this.props.fetchOrders();
 ```
 
 However, in case you need more control over your `fetchable` state fields for the different stages you can achieve it by giving `fetchableAction` a reducer definition object that is merged with the auto-created reducers.
 
 ```js
-const duck = createDuck({
+const model = createModel({
   // ...
   actions: () => ({
     fetchOrders: fetchableAction('orders', {
@@ -639,7 +647,7 @@ const duck = createDuck({
 If you need to access the API action types eg. in `reactions` or in `sagas` you can do it in the following way:
 
 ```js
-const duck = createDuck({
+const model = createModel({
   // ...
   inject: ['user'],
   reactions: ({ deps }) => ({
@@ -689,7 +697,7 @@ Check out the more detailed [API documentation](API.md).
 ## Other similar libraries
 
 - [Redux Bundler](https://reduxbundler.com/)
-- [List of various ducks libs](https://github.com/erikras/ducks-modular-redux#implementation)
+- [List of various ducks pattern libs](https://github.com/erikras/models-modular-redux#implementation)
 
 ## Caveats
 

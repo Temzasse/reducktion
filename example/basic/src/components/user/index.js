@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import userDuck from './user.duck';
+import userModel from './user.model';
 import LoginForm from './LoginForm';
 import Profile from './Profile';
 
@@ -68,7 +68,7 @@ const LogoutButton = styled.button`
 `;
 
 // You can also destruct `selectors` and `actions` for brewity
-const { selectors, actions } = userDuck;
+const { selectors, actions } = userModel;
 
 export default connect(
   state => ({

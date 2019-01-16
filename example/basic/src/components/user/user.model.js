@@ -1,8 +1,8 @@
 import { takeLatest, put } from 'redux-saga/effects';
-import { createDuck } from 'reducktion'; // eslint-disable-line
+import { createModel } from 'reducktion'; // eslint-disable-line
 import { sleep } from '../../helpers';
 
-const duck = createDuck({
+const model = createModel({
   name: 'user',
   inject: ['order'],
   state: {
@@ -33,12 +33,12 @@ const duck = createDuck({
 // Saga handlers
 function* loginSaga({ payload }) {
   if (!payload.username || !payload.password) {
-    yield put(duck.actions.loginFailed());
+    yield put(model.actions.loginFailed());
   } else {
     // Fake API call delay
     yield sleep(600);
     yield put(
-      duck.actions.loginSuccess({
+      model.actions.loginSuccess({
         name: 'Teemu Taskula',
         avatarUrl: 'https://source.unsplash.com/random/100x100',
         githubUrl: 'https://github.com/Temzasse',
@@ -47,4 +47,4 @@ function* loginSaga({ payload }) {
   }
 }
 
-export default duck;
+export default model;
