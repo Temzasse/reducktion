@@ -40,6 +40,10 @@ interface Dependencies {
   [depName: string]: Duck<any, any>;
 }
 
+interface Thunks<Deps> {
+  [thunkName: string]: Thunk<Deps>;
+}
+
 // TODO:
 // Figure out how to show proper error
 // if given action is not in keyof Actions
@@ -66,9 +70,7 @@ interface DuckDefinition<State, Actions, Deps> {
   sagas?: (
     { types, deps }: { types: ActionTypes<Actions>; deps: Deps }
   ) => any[];
-  thunks?: {
-    [thunkName: string]: Thunk<Deps>;
-  };
+  thunks?: Thunks<Deps>;
 }
 
 interface Duck<State, Actions> {

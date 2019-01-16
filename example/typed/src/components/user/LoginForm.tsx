@@ -22,6 +22,8 @@ class LoginForm extends React.Component<Props, State> {
   };
 
   handleChange = (e: React.FormEvent<HTMLInputElement>) => {
+    // TODO: not sure how to type this dynamic state update trick for forms...
+    // We should probably use separate setter methods for each form field?
     const newState = { [e.currentTarget.name]: e.currentTarget.value } as any;
     this.setState(newState);
   };
