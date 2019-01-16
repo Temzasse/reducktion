@@ -8,9 +8,7 @@ module.exports = {
       {
         modules: false,
         loose: true,
-        targets: {
-          browsers: ['last 1 version'],
-        },
+        targets: '> 1%, not dead',
       },
     ],
   ],
