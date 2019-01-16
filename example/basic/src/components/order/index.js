@@ -2,10 +2,9 @@ import React, { Component } from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { STATUSES } from 'reducktion'; // eslint-disable-line
 
 import { fetchablePropType, isLoading } from '../../helpers';
-import orderModels from './order.model';
+import orderModel from './order.model';
 import settingsModel from '../settings/settings.model';
 
 class Order extends Component {
@@ -56,14 +55,14 @@ const Orders = styled.ul`
 
 export default connect(
   state => ({
-    // orders: orderModels.selectors.getOrders(state),
-    orders: orderModels.selectors.get('orders', state),
+    // orders: orderModel.selectors.getOrders(state),
+    orders: orderModel.selectors.get('orders', state),
   }),
   {
     testThunk: settingsModel.actions.testThunk,
-    fetchOrders: orderModels.actions.fetchOrders,
+    fetchOrders: orderModel.actions.fetchOrders,
     // Use `init` action instead of the default action to not start loading
     // automatically when the action is dispatched
-    fetchPackages: orderModels.actions.fetchPackages.init,
+    fetchPackages: orderModel.actions.fetchPackages.init,
   }
 )(Order);

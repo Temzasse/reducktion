@@ -2,9 +2,8 @@ import { takeEvery, put, call } from 'redux-saga/effects';
 
 import {
   createModel,
-  fetchableAction,
   fetchable,
-  Fetchable,
+  FetchableValue,
   FetchableAction,
 } from 'reducktion';
 
@@ -13,7 +12,7 @@ import { sleep } from '../../helpers';
 
 export interface State {
   isAuthenticated: boolean;
-  profile: Fetchable<Profile | null>;
+  profile: FetchableValue<Profile | null>;
 }
 
 export interface Actions {
@@ -24,11 +23,11 @@ export interface Actions {
 const model = createModel<State, Actions>({
   name: 'user',
   state: {
-    profile: fetchable(null),
+    profile: fetchable.value(null),
     isAuthenticated: false,
   },
   actions: ({ initialState }) => ({
-    login: fetchableAction('profile', {
+    login: fetchable.action('profile', {
       success: state => ({ ...state, isAuthenticated: true }),
       failure: state => ({ ...state, isAuthenticated: false }),
     }),

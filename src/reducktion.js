@@ -7,7 +7,7 @@ import {
   handleThunks,
   isFetchableAction,
   FETCHABLE_ACTION_IDENTIFIER,
-  FETCHABLE_STATUSES,
+  FETCHABLE_STATUS,
 } from './helpers';
 
 // Creates a models model and returns chainable functions to define futher props
@@ -17,6 +17,7 @@ export const createModel = model => {
   const initialState = { ...model.state };
   const dependencies = {};
   const types = {};
+
   let reducerHandlers = {};
   let actions = {};
   let reducer;
@@ -177,16 +178,17 @@ export const initModels = (models = []) => {
   };
 };
 
-export const STATUSES = FETCHABLE_STATUSES;
+export const FetchableStatus = FETCHABLE_STATUS;
 
-// Description of a fetchable action
-export const fetchableAction = (...args) => ({
-  [FETCHABLE_ACTION_IDENTIFIER]: true,
-  args,
-});
+export const fetchable = {
+  value: initialValue => ({
+    data: initialValue,
+    status: FETCHABLE_STATUS.INITIAL,
+    error: null,
+  }),
 
-export const fetchable = initialValue => ({
-  data: initialValue,
-  status: FETCHABLE_STATUSES.INITIAL,
-  error: null,
-});
+  action: (...args) => ({
+    [FETCHABLE_ACTION_IDENTIFIER]: true,
+    args,
+  }),
+};

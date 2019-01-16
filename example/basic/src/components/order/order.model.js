@@ -1,12 +1,12 @@
 import { takeEvery, put } from 'redux-saga/effects';
-import { createModel, fetchableAction, fetchable } from 'reducktion'; // eslint-disable-line
+import { createModel, fetchable } from 'reducktion'; // eslint-disable-line
 import { sleep } from '../../helpers';
 
 const model = createModel({
   name: 'order',
   inject: ['user'],
   state: {
-    orders: fetchable([]),
+    orders: fetchable.value([]),
     /*
     {
       data: [],
@@ -14,13 +14,13 @@ const model = createModel({
       error: null,
     }
     */
-    packages: fetchable([]),
+    packages: fetchable.value([]),
   },
   actions: () => ({
     // Simple way to create action for fetchable data
-    // fetchOrders: fetchableAction('orders'),
+    // fetchOrders: fetchable.action('orders'),
     // You can also define overrides for updating the state in your own way
-    fetchOrders: fetchableAction('orders', {
+    fetchOrders: fetchable.action('orders', {
       loading: state => ({ ...state, yolo: 1 }),
       success: state => ({ ...state, yolo: 2 }),
       failure: state => ({ ...state, yolo: 3 }),
@@ -32,13 +32,13 @@ const model = createModel({
     fetchOrders.init()
     */
 
-    // fetchOrders: fetchableAction('orders', {
+    // fetchOrders: fetchable.action('orders', {
     //   loading: state => ({
     //     ...state,
     //     foo: 1,
     //   }),
     // }),
-    fetchPackages: fetchableAction('packages'),
+    fetchPackages: fetchable.action('packages'),
   }),
   reactions: ({ deps, initialState }) => ({
     // Maybe actually do something meaningful...

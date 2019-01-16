@@ -43,13 +43,13 @@ Inspiration: [models: Redux Reducer Bundles](https://github.com/erikras/models-m
 ## Installation
 
 ```sh
-$ npm install reducktion
+npm install reducktion
 ```
 
 or
 
 ```sh
-$ yarn add reducktion
+yarn add reducktion
 ```
 
 ## The Idea
@@ -540,39 +540,41 @@ function* fetchOrdersSaga() {
 
 That's quite a lot of setup / boilerplate for handling three stages of our data fetching flow.
 
-Reducktion provides a helpers called `fetchable` and `fetchableAction` that can be used to create a fetchable state value and the same three actions as above baked into one enhanced action that behind the scenes updates the necessary state fields automatically by creating the individual reducers for you.
+Reducktion provides a helper called `fetchable` that can be used to create a fetchable state value and the same three actions as above baked into one enhanced action that behind the scenes updates the necessary state fields automatically by creating the individual reducers for you.
 
-The simplest way to use `fetchableAction` is to just give it the name of state field (eg. **orders**) where you want to save the data.
-By default the auto-created reducers will also update three fields during the different stages of the flow.
+The simplest way to use `fetchable` is to just give `fetchable.action()` the name of state field where you want to save the data (eg. **'orders'**).
+By default the auto-created reducers will update three fields during the different stages of the flow.
 
-**`fetchableAction`** returns an enhanced action/reducer:
+**`fetchable.action('field')`** returns enhanced action/reducers:
 
-| Action                 | Description                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------ |
-| `action()`             | Starts the fetchable flow and sets status to 'LOADING'.                              |
-| `action.success(data)` | Finishes flow by setting status to 'SUCCESS' and saves the data to state             |
-| `action.fail(error?)`  | Fails flow by setting status to 'FAILURE' and saves the optional error data to state |
-| `action.init()`        | OPTIONAL: initialize flow without setting loading status                             |
+| Action                     | Description                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| `actionName()`             | Starts the fetchable flow and sets status to 'LOADING'.                              |
+| `actionName.success(data)` | Finishes flow by setting status to 'SUCCESS' and saves the data to state             |
+| `actionName.fail(error?)`  | Fails flow by setting status to 'FAILURE' and saves the optional error data to state |
+| `actionName.init()`        | OPTIONAL: initialize flow without setting loading status                             |
 
-Corresponding generated types are: `types.action`, `types.actionSuccess`, `types.actionFailure`, `types.actionInit`.
+Corresponding generated types are: `types.actionName`, `types.actionNameSuccess`, `types.actionNameFailure`, `types.actionNameInit`.
 
-**`fetchable`** returns an object:
+**`fetchable.value(initialValue)`** returns an object:
 
-| Field    | Description                                   |
-| -------- | --------------------------------------------- |
-| `status` | 'INITIAL' / 'LOADING' / 'SUCCESS' / 'FAILURE' |
-| `error`  | Error payload from `action.fail(error)`       |
-| `data`   | Data payload from `action.success(data)`      |
+```javascript
+{
+  status: 'INITIAL', // Can also be: 'LOADING' | 'SUCCESS' | 'FAILURE',
+  data: initialValue, // Will be the data payload from `action.success(data)`
+  error: null, // Will be the error payload from `action.fail(error)`
+}
+```
 
 Example:
 
 ```js
-import { createModel, fetchable, fetchableAction } from 'reducktion';
+import { createModel, fetchable } from 'reducktion';
 
 const model = createModel({
   name: 'order',
   state: {
-    orders: fetchable([]),
+    orders: fetchable.value([]),
     /* This creates the following data structure:
      * {
      *   data: [],
@@ -582,7 +584,7 @@ const model = createModel({
      */
   },
   actions: () => ({
-    fetchOrders: fetchableAction('orders'),
+    fetchOrders: fetchable.action('orders'),
     /* This creates the following actions:
      * fetchOrders()
      * fetchOrders.success()
@@ -619,13 +621,13 @@ connect(mapStateToProps, { fetchOrders: model.actions.fetchOrders });
 this.props.fetchOrders();
 ```
 
-However, in case you need more control over your `fetchable` state fields for the different stages you can achieve it by giving `fetchableAction` a reducer definition object that is merged with the auto-created reducers.
+However, in case you need more control over your `fetchable` state fields for the different stages you can achieve it by giving `fetchable.action()` a reducer definition object that is merged with the auto-created reducers.
 
 ```js
 const model = createModel({
   // ...
   actions: () => ({
-    fetchOrders: fetchableAction('orders', {
+    fetchOrders: fetchable.action('orders', {
       loading: (state, action) => ({
         ...state,
         something: 'yey...',

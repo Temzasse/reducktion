@@ -1,10 +1,10 @@
 import * as React from 'react';
 import styled from 'styled-components';
-import { Fetchable } from 'reducktion';
+import { FetchableValue } from 'reducktion';
 import { Profile as ProfileType } from './user.types';
 
 interface Props {
-  profile: Fetchable<ProfileType | null>;
+  profile: FetchableValue<ProfileType | null>;
 }
 
 class Profile extends React.Component<Props> {

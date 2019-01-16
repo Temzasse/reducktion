@@ -87,20 +87,28 @@ interface Model<State, Actions> {
   getReducer: () => Reducer<any>;
 }
 
-// EXPORTS
-// Exported types -----------------------------------------------------------
+interface Fetchable {
+  value: <T>(val: T) => FetchableValue<T>,
+  action: <State, K extends keyof State>(
+    // Only allow state fields for fetchable values
+    stateField: FetchableValue extends State[K] ? K : never,
+    customReducers?: Partial<FetchableReducers<State>>
+  ) => FetchableReducers<State>,
+}
 
-export enum STATUSES {
+// EXPORTS ********************************************************************
+
+export enum FetchableStatus {
   INITIAL,
   LOADING,
   SUCCESS,
   FAILURE,
 }
 
-export interface Fetchable<Data = any> {
+export interface FetchableValue<Data = any> {
   data: Data;
   error: any;
-  status: STATUSES;
+  status: FetchableStatus;
 }
 
 export interface FetchableAction<SuccessData> extends ActionFunc {
@@ -109,7 +117,7 @@ export interface FetchableAction<SuccessData> extends ActionFunc {
   success: ActionFunc<SuccessData>;
 }
 
-// Exported functions -------------------------------------------------------
+export const fetchable: Fetchable;
 
 export function createModel<State, Actions, Deps = Dependencies>(
   df: ModelDefinition<State, Actions, Deps>
@@ -125,11 +133,3 @@ export function initModels(
 } & {
   [modelName: string]: Model<any, any>;
 };
-
-export function fetchableAction<State, K extends keyof State>(
-  // Only allow state fields for fetchable values
-  stateField: Fetchable extends State[K] ? K : never,
-  customReducers?: Partial<FetchableReducers<State>>
-): FetchableReducers<State>;
-
-export function fetchable<T>(val: T): Fetchable<T>;

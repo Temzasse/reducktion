@@ -28,7 +28,7 @@ const reduceReducers = (...reducers) => {
   };
 };
 
-export const FETCHABLE_STATUSES = {
+export const FETCHABLE_STATUS = {
   INITIAL: 'INITIAL',
   LOADING: 'LOADING',
   SUCCESS: 'SUCCESS',
@@ -76,7 +76,7 @@ const createFetchableReducers = ({ types, successField, overrides }) => {
       ...state,
       [successField]: {
         ...state[successField],
-        status: FETCHABLE_STATUSES.LOADING,
+        status: FETCHABLE_STATUS.LOADING,
         error: null,
       },
     }),
@@ -84,7 +84,7 @@ const createFetchableReducers = ({ types, successField, overrides }) => {
       ...state,
       [successField]: {
         data: action.payload,
-        status: FETCHABLE_STATUSES.SUCCESS,
+        status: FETCHABLE_STATUS.SUCCESS,
         error: null,
       },
     }),
@@ -92,7 +92,7 @@ const createFetchableReducers = ({ types, successField, overrides }) => {
       ...state,
       [successField]: {
         ...state[successField],
-        status: FETCHABLE_STATUSES.FAILURE,
+        status: FETCHABLE_STATUS.FAILURE,
         error: action.payload,
       },
     }),
@@ -157,9 +157,3 @@ export const FETCHABLE_ACTION_IDENTIFIER = '__IS_FETCHABLE_ACTION__';
 
 export const isFetchableAction = x =>
   x && Object.prototype.hasOwnProperty.call(x, FETCHABLE_ACTION_IDENTIFIER);
-
-export const API_STATUSES = {
-  LOADING: 'LOADING',
-  FAILURE: 'FAILURE',
-  SUCCESS: 'SUCCESS',
-};

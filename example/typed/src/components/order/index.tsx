@@ -1,13 +1,13 @@
 import * as React from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
-import { STATUSES, Fetchable } from 'reducktion';
+import { FetchableStatus, FetchableValue } from 'reducktion';
 
-import orderModels from './order.model';
+import orderModel from './order.model';
 import { Order } from './order.types';
 
 class OrderComp extends React.Component<{
-  orders: Fetchable<Order[]>;
+  orders: FetchableValue<Order[]>;
   fetchOrders: () => any;
 }> {
   render() {
@@ -18,7 +18,7 @@ class OrderComp extends React.Component<{
         <h1>Order example</h1>
         <button onClick={fetchOrders}>Fetch orders</button>
 
-        {orders.status === STATUSES.LOADING && (
+        {orders.status === FetchableStatus.LOADING && (
           <Loading>Loading orders...</Loading>
         )}
 
@@ -49,9 +49,9 @@ const Orders = styled.ul`
 
 export default connect(
   state => ({
-    orders: orderModels.selectors.get('orders')(state),
+    orders: orderModel.selectors.get('orders')(state),
   }),
   {
-    fetchOrders: orderModels.actions.fetchOrders,
+    fetchOrders: orderModel.actions.fetchOrders,
   }
 )(OrderComp);

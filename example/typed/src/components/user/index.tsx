@@ -1,7 +1,7 @@
 import * as React from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
-import { Fetchable } from 'reducktion';
+import { FetchableValue } from 'reducktion';
 
 import userModel from './user.model';
 import LoginForm from './LoginForm';
@@ -11,7 +11,7 @@ import { LoginInput, Profile as ProfileType } from './user.types';
 interface Props {
   login: (data: LoginInput) => any;
   logout: () => any;
-  profile: Fetchable<ProfileType | null>;
+  profile: FetchableValue<ProfileType | null>;
   isAuthenticated: boolean;
 }
 

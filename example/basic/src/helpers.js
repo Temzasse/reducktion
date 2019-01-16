@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { STATUSES } from 'reducktion'; // eslint-disable-line
+import { FetchableStatus } from 'reducktion'; // eslint-disable-line
 
 export const sleep = (ms = 500) =>
   new Promise(resolve => setTimeout(resolve, ms));
@@ -11,7 +11,7 @@ export const fetchablePropType = (
   PropTypes.shape({
     data: dataPropType,
     error: errPropType,
-    status: PropTypes.oneOf(Object.values(STATUSES)).isRequired,
+    status: PropTypes.oneOf(Object.values(FetchableStatus)).isRequired,
   }).isRequired;
 
-export const isLoading = obj => obj.status === STATUSES.LOADING;
+export const isLoading = obj => obj.status === FetchableStatus.LOADING;

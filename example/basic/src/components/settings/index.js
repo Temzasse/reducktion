@@ -106,7 +106,9 @@ export default connect(
     gpsEnabled: settingsModel.selectors.getGpsEnabled(state),
     // OR: gpsEnabled: settingsModel.selectors.get('gpsEnabled', state),
     darkModeEnabled: settingsModel.selectors.getDarkModeEnabled(state),
-    notificationsEnabled: settingsModel.selectors.getNotificationsEnabled(state),
+    notificationsEnabled: settingsModel.selectors.getNotificationsEnabled(
+      state
+    ),
   }),
   {
     toggleNotifications: settingsModel.actions.toggleNotifications,

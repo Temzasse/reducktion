@@ -2,25 +2,24 @@ import {
   createModel,
   initModels,
   fetchable,
-  fetchableAction,
-  STATUSES,
+  FetchableStatus,
 } from './src/reducktion';
 
 // TODO: fix tests related to auto-generated selectors!
 
-describe('fetchable/fetchableAction', () => {
+describe('fetchable/fetchable.action', () => {
   it('should create fetchable value', () => {
-    const f = fetchable([]);
+    const f = fetchable.value([]);
     expect(f.data).toEqual([]);
-    expect(f.status).toEqual(STATUSES.INITIAL);
+    expect(f.status).toEqual(FetchableStatus.INITIAL);
     expect(f.error).toEqual(null);
   });
 
   it('should create description of fetchable action', () => {
-    const fa = fetchableAction('orders');
+    const fa = fetchable.action('orders');
     expect(fa.args).toEqual(['orders']);
 
-    const fa2 = fetchableAction('orders', {
+    const fa2 = fetchable.action('orders', {
       loading: state => ({ ...state, some: 1 }),
     });
     expect(fa2.args[0]).toEqual('orders');
@@ -170,14 +169,14 @@ describe('createModel', () => {
     });
   });
 
-  describe('fetchableAction', () => {
+  describe('fetchable.action', () => {
     it('should create fetchable actions', () => {
       const model = createModel({
         name: 'test',
         state: {
-          orders: fetchable([]),
+          orders: fetchable.value([]),
         },
-        actions: () => ({ testAction: fetchableAction('orders') }),
+        actions: () => ({ testAction: fetchable.action('orders') }),
       });
 
       expect(model.actions.testAction).toBeDefined();
@@ -192,7 +191,7 @@ describe('createModel', () => {
 
       const orders = {
         data: [],
-        status: STATUSES.INITIAL,
+        status: FetchableStatus.INITIAL,
         error: null,
       };
 
@@ -206,9 +205,9 @@ describe('createModel', () => {
         createModel({
           name: 'test',
           state: {
-            orders: fetchable([]),
+            orders: fetchable.value([]),
           },
-          actions: () => ({ testAction: fetchableAction() }),
+          actions: () => ({ testAction: fetchable.action() }),
         });
       }).toThrowError(/you must provide the name of the field/i);
     });
@@ -217,14 +216,14 @@ describe('createModel', () => {
       const model = createModel({
         name: 'test',
         state: {
-          orders: fetchable(),
+          orders: fetchable.value(),
         },
-        actions: () => ({ testAction: fetchableAction('orders') }),
+        actions: () => ({ testAction: fetchable.action('orders') }),
       });
 
       const orders = {
         data: undefined,
-        status: STATUSES.INITIAL,
+        status: FetchableStatus.INITIAL,
         error: null,
       };
 
@@ -347,10 +346,10 @@ describe('initModels', () => {
     const model1 = createModel({
       name: 'test1',
       state: {
-        data: fetchable([]),
+        data: fetchable.value([]),
         isAuthenticated: true,
       },
-      actions: () => ({ testAction: fetchableAction('data') }),
+      actions: () => ({ testAction: fetchable.action('data') }),
     });
 
     const model2 = createModel({
@@ -388,10 +387,10 @@ describe('initModels', () => {
     const model = createModel({
       name: 'test1',
       state: {
-        orders: fetchable([]),
+        orders: fetchable.value([]),
       },
       actions: () => ({
-        testAction: fetchableAction('orders', {
+        testAction: fetchable.action('orders', {
           loading: state => ({ ...state, some1: 1 }),
           success: state => ({ ...state, some2: 2 }),
           failure: state => ({ ...state, some3: 3 }),

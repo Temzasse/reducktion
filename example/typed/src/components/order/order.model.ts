@@ -4,9 +4,8 @@ import { Action } from 'redux';
 
 import {
   createModel,
-  fetchableAction,
   fetchable,
-  Fetchable,
+  FetchableValue,
   FetchableAction,
 } from 'reducktion';
 
@@ -17,8 +16,8 @@ import { Order, Package } from './order.types';
 export interface State {
   foo: number;
   bar: string;
-  orders: Fetchable<Order[]>;
-  packages: Fetchable<Package[]>;
+  orders: FetchableValue<Order[]>;
+  packages: FetchableValue<Package[]>;
 }
 
 export interface Actions {
@@ -38,8 +37,8 @@ const model = createModel<State, Actions, Deps>({
   state: {
     foo: 1,
     bar: 'lol',
-    orders: fetchable([]),
-    packages: fetchable([]),
+    orders: fetchable.value([]),
+    packages: fetchable.value([]),
   },
   actions: ({ initialState }) => ({
     // Basic actions
@@ -50,8 +49,8 @@ const model = createModel<State, Actions, Deps>({
     lolAction: () => ({ ...initialState }),
 
     // Fetchable actions
-    fetchPackages: fetchableAction('packages'),
-    fetchOrders: fetchableAction('orders', {
+    fetchPackages: fetchable.action('packages'),
+    fetchOrders: fetchable.action('orders', {
       // Define custom reducer for different statuses
       loading: state => ({ ...state, bar: 'loading' }),
       success: state => ({ ...state, bar: 'success' }),

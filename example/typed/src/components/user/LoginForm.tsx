@@ -1,13 +1,13 @@
 import * as React from 'react';
 import styled from 'styled-components';
-import { Fetchable, STATUSES } from 'reducktion';
+import { FetchableValue, FetchableStatus } from 'reducktion';
 
 import { LoginInput } from './user.types';
 import { Profile } from './user.types';
 
 interface Props {
   onSubmit: (data: LoginInput) => any;
-  profile: Fetchable<Profile | null>;
+  profile: FetchableValue<Profile | null>;
 }
 
 interface State {
@@ -37,8 +37,8 @@ class LoginForm extends React.Component<Props, State> {
   render() {
     const { profile } = this.props;
     const { username, password } = this.state;
-    const isLoading = profile.status === STATUSES.LOADING;
-    const hasError = profile.status === STATUSES.FAILURE;
+    const isLoading = profile.status === FetchableStatus.LOADING;
+    const hasError = profile.status === FetchableStatus.FAILURE;
 
     return (
       <Form onSubmit={this.handleSubmit} autoComplete="off">
