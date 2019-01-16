@@ -25,6 +25,7 @@ export interface Actions {
   fetchPackages: FetchableAction<Package[]>;
   fooAction: (lol: number) => any;
   lolAction: (lol: number) => any;
+  someThunk: (arg: any) => any;
 }
 
 interface Deps {
@@ -56,6 +57,9 @@ const model = createModel<State, Actions, Deps>({
       success: state => ({ ...state, bar: 'success' }),
       failure: state => ({ ...state, bar: 'failure' }),
     }),
+
+    // TODO: fix...
+    someThunk: state => state,
   }),
   selectors: ({ name }) => ({
     getFoo: state => state[name].foo,
