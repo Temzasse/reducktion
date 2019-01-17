@@ -43,7 +43,7 @@ const model = createModel<State, Actions, Deps>({
   },
   actions: ({ initialState }) => ({
     // Basic actions
-    fooAction: (state, action: { payload: number }) => ({
+    fooAction: (state, action) => ({
       ...state,
       foo: action.payload,
     }),

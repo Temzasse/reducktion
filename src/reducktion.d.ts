@@ -1,3 +1,9 @@
+// Helper
+type ArgumentType<F extends Function> = F extends (arg: infer A) => any
+  ? A
+  : never;
+
+// TODO: do we need this?
 interface RootState<StatePart> {
   [statePart: string]: StatePart;
 }
@@ -10,7 +16,7 @@ type ActionTypes<Actions> = { [K in keyof Actions]: string } & {
   [x: string]: string;
 };
 
-interface ActionCreator<Payload = any> {
+interface ActionCreator<Payload> {
   type: string;
   payload: Payload;
   [x: string]: any; // Allow additional meta fields
@@ -37,12 +43,12 @@ interface FetchableReducers<State> {
 }
 
 interface Fetchable {
-  value: <T>(val: T) => FetchableValue<T>,
+  value: <T>(val: T) => FetchableValue<T>;
   action: <State, K extends keyof State>(
     // Only allow state fields for fetchable values
     stateField: FetchableValue extends State[K] ? K : never,
     customReducers?: Partial<FetchableReducers<State>>
-  ) => FetchableReducers<State>,
+  ) => FetchableReducers<State>;
 }
 
 interface Dependencies {
@@ -54,13 +60,17 @@ interface Dependencies {
 // if given action is not in keyof Actions
 interface ModelDefinition<State, Actions, Deps> {
   name: string;
-  inject?: string[];
+  inject?: [keyof Deps];
   state: State;
   actions: (
     { initialState }: { initialState: State }
   ) => {
     // Only include those keys that are present in the action's interface
-    [K in keyof Actions]: Reducer<State> | FetchableReducers<State>
+    [K in keyof Actions]: Actions[K] extends FetchableAction<any>
+      ? FetchableReducers<State>
+      : Actions[K] extends Function
+      ? Reducer<State, ArgumentType<Actions[K]>>
+      : never
   };
   reactions?: (
     { initialState, deps }: { initialState: State; deps: Deps }
