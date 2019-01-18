@@ -129,10 +129,17 @@ export default createModel({
     isLoading: false,
     hasError: false,
   },
-  selectors: ({ name }) => ({
+  selectors: ({ name, selectors }) => ({
     getOrders: state => state[name].orders,
     getIsLoading: state => state[name].isLoading,
     getHasError: state => state[name].hasError,
+    // Composing selectors is also easy
+    getComposed: state => {
+      const isLoading = selectors.getIsLoading(state);
+      const orders = selectors.getOrders(state);
+      if (isLoading || orders.length === 0) return [];
+      return orders.filter(o => o.something !== 'amazing');
+    },
   }),
   actions: () => ({
     fetchOrders: state => ({ ... }),

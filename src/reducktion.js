@@ -68,13 +68,6 @@ export const createModel = model => {
     actions = { ...actions, ...handleThunks(model.thunks, dependencies) };
   }
 
-  let selectors = {};
-
-  // Add selectors defined by user
-  if (model.selectors) {
-    selectors = model.selectors({ name: model.name });
-  }
-
   // Add simple `get` for selecting state fields by name
   const getSelector = key => state => {
     const statePart = state[model.name];
@@ -88,7 +81,16 @@ export const createModel = model => {
     return statePart[key];
   };
 
-  selectors = { ...selectors, get: getSelector };
+  const selectors = { get: getSelector };
+
+  // Add selectors defined by user
+  if (model.selectors) {
+    // Inject same selectors to enable selector composability (eg. reselect)
+    const s = model.selectors({ name: model.name, selectors });
+    Object.entries(s).forEach(([k, v]) => {
+      selectors[k] = v;
+    });
+  }
 
   // Fills in the dependencies that were requested when calling inject.
   const _fillDeps = deps => {

@@ -4,6 +4,7 @@ import { Action } from 'redux';
 
 import { UserModel } from '../user/user.model';
 import { OrderModel } from '../order/order.model';
+import { InitialState } from '../types';
 
 interface Actions {
   resetSettings: () => any;
@@ -13,10 +14,14 @@ interface Actions {
   testThunk: () => any;
 }
 
-interface State {
+export interface State {
   notificationsEnabled: boolean;
   gpsEnabled: boolean;
   darkModeEnabled: boolean;
+}
+
+interface Selectors {
+  getThemeMode: (state: InitialState) => 'light' | 'dark';
 }
 
 interface Deps {
@@ -24,7 +29,7 @@ interface Deps {
   order: OrderModel;
 }
 
-const model = createModel<State, Actions, Deps>({
+const model = createModel<State, Actions, Selectors, Deps>({
   name: 'settings',
   inject: ['user', 'order'],
   state: {
@@ -32,8 +37,8 @@ const model = createModel<State, Actions, Deps>({
     gpsEnabled: false,
     darkModeEnabled: false,
   },
-  selectors: ({ name }) => ({
-    getThemeMode: state => (state[name].darkModeEnabled ? 'dark' : 'light'),
+  selectors: () => ({
+    getThemeMode: state => (state.settings.darkModeEnabled ? 'dark' : 'light'),
   }),
   actions: ({ initialState }) => ({
     resetSettings: () => ({ ...initialState }),

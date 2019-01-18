@@ -1,6 +1,7 @@
 import { takeEvery, put, select } from 'redux-saga/effects';
 import { ThunkDispatch } from 'redux-thunk';
 import { Action } from 'redux';
+import { createSelector } from 'reselect';
 
 import {
   createModel,
@@ -12,7 +13,9 @@ import {
 import { sleep } from '../../helpers';
 import { UserModel } from '../user/user.model';
 import { Order, Package } from './order.types';
+import { InitialState } from '../types';
 
+// #region types
 export interface State {
   foo: number;
   bar: string;
@@ -28,11 +31,18 @@ export interface Actions {
   someThunk: (arg: any) => any;
 }
 
+interface Selectors {
+  getFoo: (state: InitialState) => number;
+  getOrdersData: (state: InitialState) => Order[];
+  getSomethingComplex: (state: InitialState) => string;
+}
+
 interface Deps {
   user: UserModel;
 }
+// #endregion
 
-const model = createModel<State, Actions, Deps>({
+const model = createModel<State, Actions, Selectors, Deps>({
   name: 'order',
   inject: ['user'],
   state: {
@@ -61,12 +71,18 @@ const model = createModel<State, Actions, Deps>({
     // TODO: fix...
     someThunk: state => state,
   }),
-  selectors: ({ name }) => ({
-    getFoo: state => state[name].foo,
-    getOrdersCustom: state => state[name].orders.data,
-    getBarYeyd: state => {
-      const x = 'yey';
-      return `${state[name].bar}-${x}`;
+  selectors: ({ selectors }) => ({
+    getFoo: state => state.order.foo,
+    getOrdersData: state => state.order.orders.data,
+    getSomethingComplex: state => {
+      const sel = createSelector(
+        [selectors.getFoo, selectors.getOrdersData],
+        (foo, data) => {
+          if (data.length === 0) return 'No orders';
+          return `${foo}-${data[0].id}`;
+        }
+      );
+      return sel(state);
     },
   }),
   thunks: {
@@ -87,12 +103,14 @@ function* fetchOrdersSaga(action: any): any {
   console.log({ action });
   try {
     // Select the fetchable value
-    const orders1 = yield select(model.selectors.get('orders'));
+    const x = yield select(model.selectors.getSomethingComplex);
+    const orders2 = yield select(model.selectors.get('orders'));
 
-    // Or use a custom selector to get the data field directly
-    // const orders2: Order[] = yield select(model.selectors);
+    console.log({ x, orders2 });
 
-    console.log({ orders1 });
+    const foo = yield select(model.selectors.getFoo);
+
+    console.log({ foo });
 
     // Fake API call delay
     yield sleep(2000);
@@ -108,6 +126,7 @@ function* fetchOrdersSaga(action: any): any {
       ])
     );
   } catch (error) {
+    console.log('FAIL!', error);
     yield put(model.actions.fetchOrders.fail('Could not load orders!'));
   }
 }

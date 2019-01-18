@@ -118,6 +118,38 @@ describe('createModel', () => {
         model.selectors.get('wrong')({ test: { field: 1 } });
       }).toThrowError(/select a non-existent field 'wrong'/i);
     });
+
+    it('should use custom selector', () => {
+      const model = createModel({
+        name: 'test',
+        state: { field: 1 },
+        actions: () => ({ testAction: state => ({ ...state }) }),
+        selectors: ({ name }) => ({
+          getField: state => state[name].field,
+        }),
+      });
+      const testState = { test: { field: 1 } };
+      expect(model.selectors.getField(testState)).toBe(1);
+    });
+
+    it('should be able to compose custom selectors', () => {
+      const model = createModel({
+        name: 'test',
+        state: { field1: 1, field2: 2 },
+        actions: () => ({ testAction: state => ({ ...state }) }),
+        selectors: ({ name, selectors }) => ({
+          getField1: state => state[name].field1,
+          getField2: state => state[name].field2,
+          getComposed: state => {
+            const field1 = selectors.getField1(state);
+            const field2 = selectors.getField2(state);
+            return `${field1}${field2}`;
+          },
+        }),
+      });
+      const testState = { test: { field1: 1, field2: 2 } };
+      expect(model.selectors.getComposed(testState)).toBe('12');
+    });
   });
 
   describe('sagas', () => {
