@@ -1,12 +1,17 @@
-import { createStore, applyMiddleware, combineReducers, compose } from 'redux';
+import { createStore, applyMiddleware, combineReducers, compose, DeepPartial } from 'redux';
 import { all } from 'redux-saga/effects';
 import createSagaMiddleware from 'redux-saga';
 import logger from 'redux-logger';
 import thunk from 'redux-thunk';
 import { initModels } from 'reducktion';
 
-import orderModel from './components/order/order.model';
-import userModel from './components/user/user.model';
+import orderModel, { OrderModel } from './components/order/order.model';
+import userModel, { UserModel } from './components/user/user.model';
+
+export interface RootState {
+  order: OrderModel;
+  user: UserModel;
+}
 
 const models = initModels([orderModel, userModel]);
 const rootReducer = combineReducers(models.allReducers);
@@ -22,7 +27,7 @@ const enhancer = composeEnhancers(
   applyMiddleware(sagaMiddleware, thunk, logger)
 );
 
-export default function configureStore(initialState = undefined) {
+export default function configureStore(initialState?: DeepPartial<RootState>) {
   const store = createStore(rootReducer, initialState, enhancer);
   sagaMiddleware.run(rootSaga);
   return store;

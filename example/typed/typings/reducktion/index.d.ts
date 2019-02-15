@@ -4,9 +4,8 @@ declare module 'reducktion' {
     ? A
     : never;
 
-  // TODO: do we need this?
-  interface RootState<StatePart> {
-    [statePart: string]: StatePart;
+  interface RootState {
+    [statePart: string]: any;
   }
 
   // Provide action keys for auto-complete but allow custom types
@@ -41,6 +40,8 @@ declare module 'reducktion' {
     failure: Reducer<State>;
   }
 
+  type NoopReducer = (state: any) => any;
+
   interface Fetchable {
     value: <T>(val: T) => FetchableValue<T>;
     action: <State, K extends keyof State>(
@@ -48,6 +49,7 @@ declare module 'reducktion' {
       stateField: FetchableValue extends State[K] ? K : never,
       customReducers?: Partial<FetchableReducers<State>>
     ) => FetchableReducers<State>;
+    noop: () => NoopReducer;
   }
 
   // TODO:
@@ -65,7 +67,7 @@ declare module 'reducktion' {
         ? FetchableReducers<State>
         : Actions[K] extends Function
         ? Reducer<State, ArgumentType<Actions[K]>>
-        : never
+        : never;
     };
     reactions?: (
       { initialState, deps }: { initialState: State; deps: Deps }
@@ -92,7 +94,7 @@ declare module 'reducktion' {
     selectors: Selectors & {
       get: <K extends keyof State>(
         stateField: K
-      ) => (state: RootState<State>, ...args: any[]) => Pick<State, K>[K];
+      ) => (state: RootState, ...args: any[]) => Pick<State, K>[K];
     };
     getSagas: () => [];
     getReducer: () => Reducer<any>;

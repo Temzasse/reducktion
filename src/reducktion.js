@@ -193,4 +193,7 @@ export const fetchable = {
     [FETCHABLE_ACTION_IDENTIFIER]: true,
     args,
   }),
+
+  // No-op reducer for cases when an action does not update state
+  noop: () => state => state,
 };

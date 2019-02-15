@@ -3,9 +3,8 @@ type ArgumentType<F extends Function> = F extends (arg: infer A) => any
   ? A
   : never;
 
-// TODO: do we need this?
-interface RootState<StatePart> {
-  [statePart: string]: StatePart;
+interface RootState {
+  [statePart: string]: any;
 }
 
 // Provide action keys for auto-complete but allow custom types
@@ -40,6 +39,8 @@ interface FetchableReducers<State> {
   failure: Reducer<State>;
 }
 
+type NoopReducer = (state: any) => any;
+
 interface Fetchable {
   value: <T>(val: T) => FetchableValue<T>;
   action: <State, K extends keyof State>(
@@ -47,6 +48,7 @@ interface Fetchable {
     stateField: FetchableValue extends State[K] ? K : never,
     customReducers?: Partial<FetchableReducers<State>>
   ) => FetchableReducers<State>;
+  noop: () => NoopReducer;
 }
 
 // TODO:
@@ -64,7 +66,7 @@ interface ModelDefinition<State, Actions, Selectors, Deps> {
       ? FetchableReducers<State>
       : Actions[K] extends Function
       ? Reducer<State, ArgumentType<Actions[K]>>
-      : never
+      : never;
   };
   reactions?: (
     { initialState, deps }: { initialState: State; deps: Deps }
@@ -91,7 +93,7 @@ interface Model<State, Actions, Selectors> {
   selectors: Selectors & {
     get: <K extends keyof State>(
       stateField: K
-    ) => (state: RootState<State>, ...args: any[]) => Pick<State, K>[K];
+    ) => (state: RootState, ...args: any[]) => Pick<State, K>[K];
   };
   getSagas: () => [];
   getReducer: () => Reducer<any>;

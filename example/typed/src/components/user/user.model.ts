@@ -15,9 +15,10 @@ export interface State {
   profile: FetchableValue<Profile | null>;
 }
 
-export interface Actions {
+interface Actions {
   login: FetchableAction<Profile>;
   logout: () => any;
+  deleteUser: () => any;
 }
 
 const model = createModel<State, Actions>({
@@ -27,13 +28,17 @@ const model = createModel<State, Actions>({
     isAuthenticated: false,
   },
   actions: ({ initialState }) => ({
+    deleteUser: fetchable.noop(),
     login: fetchable.action('profile', {
       success: state => ({ ...state, isAuthenticated: true }),
       failure: state => ({ ...state, isAuthenticated: false }),
     }),
     logout: () => ({ ...initialState }),
   }),
-  sagas: ({ types }) => [takeEvery(types.login, loginSaga)],
+  sagas: ({ types }) => [
+    takeEvery(types.login, loginSaga),
+    takeEvery(types.deleteUser, deleteUserSaga),
+  ],
 });
 
 // Saga handlers
@@ -60,6 +65,10 @@ function* loginSaga(action: any): any {
   } catch (error) {
     yield put(model.actions.login.fail('Failed to login!'));
   }
+}
+
+function* deleteUserSaga(action: any): any {
+  yield console.log('Do something');
 }
 
 export type UserModel = typeof model;

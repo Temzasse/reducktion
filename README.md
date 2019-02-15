@@ -8,9 +8,9 @@ _A small helper library for Redux to reduce boilerplate and enforce a more modul
 
 <br>
 
-- 🦆 **Modular architecture with ducks pattern.**
-- 🔮 **Less boilerplate.**
-- 💉 **Inject dependencies easily.**
+* 🦆 **Modular architecture with ducks pattern.**
+* 🔮 **Less boilerplate.**
+* 💉 **Inject dependencies easily.**
 
 <br>
 
@@ -20,18 +20,18 @@ Inspiration: [models: Redux Reducer Bundles](https://github.com/erikras/models-m
 
 ---
 
-- [Getting started](#getting-started)
-  - [Installation](#installation)
-  - [The Idea](#the-idea)
-  - [Usage](#usage)
-- [Dependency injection](#dependency-injection)
-- [Usage with redux-thunk](#usage-with-redux-thunk)
-- [Usage with redux-saga](#usage-with-redux-saga)
-- [Example with everything](#example-with-everything)
-- [Advanced](#advanced)
-- [API](#api)
-- [Other similar libraries](#other-similar-libraries)
-- [Caveats](#caveats)
+* [Getting started](#getting-started)
+  * [Installation](#installation)
+  * [The Idea](#the-idea)
+  * [Usage](#usage)
+* [Dependency injection](#dependency-injection)
+* [Usage with redux-thunk](#usage-with-redux-thunk)
+* [Usage with redux-saga](#usage-with-redux-saga)
+* [Example with everything](#example-with-everything)
+* [Advanced](#advanced)
+* [API](#api)
+* [Other similar libraries](#other-similar-libraries)
+* [Caveats](#caveats)
 
 # reducktion
 
@@ -653,7 +653,9 @@ const model = createModel({
 });
 ```
 
-If you need to access the API action types eg. in `reactions` or in `sagas` you can do it in the following way:
+In some cases your actions don't need to update the state in any way and you might just want to listen to the action in your sagas. For these cases Reducktion also provides a helper function `fetchable.noop()` that returns a no-op reducer so the action won't update the state but you can still the action type when setuping your saga watchers.
+
+If you need to access the fetchable action types also in your `reactions` you can do it in the following way:
 
 ```js
 const model = createModel({
@@ -694,7 +696,7 @@ const fetchablePropType = (dataPropType, errPropType = PropTypes.string) => {
 // Using the helper
 const propsTypes = {
   balanceItems: fetchablePropType(PropTypes.array.isRequired),
-}
+};
 ```
 
 ## API
@@ -703,8 +705,8 @@ const propsTypes = {
 
 ## Other similar libraries
 
-- [Redux Bundler](https://reduxbundler.com/)
-- [List of various ducks pattern libs](https://github.com/erikras/models-modular-redux#implementation)
+* [Redux Bundler](https://reduxbundler.com/)
+* [List of various ducks pattern libs](https://github.com/erikras/models-modular-redux#implementation)
 
 ## Caveats
 

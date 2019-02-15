@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { connect } from 'react-redux';
 import { FetchableValue } from 'reducktion';
 
+import { RootState } from '../../init';
 import userModel from './user.model';
 import LoginForm from './LoginForm';
 import Profile from './Profile';
@@ -59,7 +60,7 @@ const LogoutButton = styled.button`
 const { selectors, actions } = userModel;
 
 export default connect(
-  state => ({
+  (state: RootState) => ({
     isAuthenticated: selectors.get('isAuthenticated')(state),
     profile: selectors.get('profile')(state),
   }),

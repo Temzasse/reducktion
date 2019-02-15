@@ -7,7 +7,7 @@ import {
 
 // TODO: fix tests related to auto-generated selectors!
 
-describe('fetchable/fetchable.action', () => {
+describe('fetchable', () => {
   it('should create fetchable value', () => {
     const f = fetchable.value([]);
     expect(f.data).toEqual([]);
@@ -24,6 +24,12 @@ describe('fetchable/fetchable.action', () => {
     });
     expect(fa2.args[0]).toEqual('orders');
     expect(fa2.args[1].loading).toBeInstanceOf(Function);
+  });
+
+  it('should create fetchable no-op reducer', () => {
+    const reducer = fetchable.noop();
+    const state = { test: 1, test2: 2 };
+    expect(reducer(state)).toEqual(state);
   });
 });
 
