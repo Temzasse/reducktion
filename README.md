@@ -8,7 +8,7 @@ _A small helper library for Redux to reduce boilerplate and enforce a more modul
 
 <br>
 
-* 🦆 **Modular architecture with ducks pattern.**
+* 🦆 **Modular architecture based on the ducks pattern.**
 * 🔮 **Less boilerplate.**
 * 💉 **Inject dependencies easily.**
 
@@ -16,7 +16,7 @@ _A small helper library for Redux to reduce boilerplate and enforce a more modul
 
 ---
 
-Inspiration: [models: Redux Reducer Bundles](https://github.com/erikras/models-modular-redux).
+Inspiration: [Redux Reducer Bundles](https://github.com/erikras/ducks-modular-redux).
 
 ---
 
@@ -29,7 +29,7 @@ Inspiration: [models: Redux Reducer Bundles](https://github.com/erikras/models-m
 * [Usage with redux-saga](#usage-with-redux-saga)
 * [Example with everything](#example-with-everything)
 * [Advanced](#advanced)
-* [API](#api)
+* [TypeScript](#typescript)
 * [Other similar libraries](#other-similar-libraries)
 * [Caveats](#caveats)
 
@@ -60,7 +60,7 @@ required to setup your action types, action creators, reducers, selectors, async
 However, in many cases it is possible to avoid this unnecessary boilerplate by rethinking the architecture of your redux entities. One popular approach is so called ducks pattern that combines all the entities into a one file, a model module. A model module should only concern one feature of your app. This means that you don't have separate folders or even files for your actions, reducers, sagas etc. instead you split everything by feature so you end up with folders like **user**, **order**, **auth** that encapsulate everything related to that feature.
 
 Reducktion is a customized implementation of the ducks pattern and it aims to help you manage your redux entities
-in a more modular way while providing some additional utilities such as [dependency injection](dependency-injection).
+in a more modular way while providing some additional utilities such as [dependency injection](#dependency-injection).
 
 ## Usage
 
@@ -424,9 +424,8 @@ Let's cram all the goodness into a single model so you can see everything in one
 ```javascript
 import { createModel } from 'reducktion';
 import { takeEvery, takeLatest, put, call } from 'redux-saga/effects';
-import { takeEvery, put } from 'redux-saga/effects';
-import { createModel } from 'reducktion'; // eslint-disable-line
-import { sleep } from '../../helpers';
+import { createModel } from 'reducktion';
+import { sleep } from './helpers';
 
 const model = createModel({
   name: 'order',
@@ -494,7 +493,7 @@ export default model;
 
 ## Advanced
 
-### Data fetching helper
+### `fetchable` data fetching helper
 
 Nowadays, many websites are SPAs (Single Page Applications) and have to get some data from an API to show to the users.
 This data fetching process usually consists of three stages: `loading the data`, `receiving the data`, and `handling errors`.
@@ -699,9 +698,13 @@ const propsTypes = {
 };
 ```
 
-## API
+## TypeScript
 
-> TODO: UPDATE API DOCS!
+Reducktion has a decent support for TypeScript (PRs welcome ❤). Adding basic typings should be quite straightforward but if you need to type every angle of your models it might take a bit more work. It would be nice to improve the typings so that more things could be inferred without manually defining your types (after all one of the goals of this library is to reduce boilerplate 😛).
+
+Check the `.models.ts` files in the typed [examples](./example/typed/src/components/order/order.model.ts) to see how Reducktion can be used with TypeScript.
+
+**TODO:** add more documentation about TypeScript.
 
 ## Other similar libraries
 
