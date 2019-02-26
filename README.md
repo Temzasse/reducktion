@@ -8,9 +8,10 @@ _A small helper library for Redux to reduce boilerplate and enforce a more modul
 
 <br>
 
-* 🦆 **Modular architecture based on the ducks pattern.**
+* 🦆 **Modular architecture.**
 * 🔮 **Less boilerplate.**
 * 💉 **Inject dependencies easily.**
+* ✨ **Includes async data fetching helpers.**
 
 <br>
 
@@ -20,10 +21,9 @@ Inspiration: [Redux Reducer Bundles](https://github.com/erikras/ducks-modular-re
 
 ---
 
-* [Getting started](#getting-started)
-  * [Installation](#installation)
-  * [The Idea](#the-idea)
-  * [Usage](#usage)
+* [Installation](#installation)
+* [The Idea](#the-idea)
+* [Usage](#usage)
 * [Dependency injection](#dependency-injection)
 * [Usage with redux-thunk](#usage-with-redux-thunk)
 * [Usage with redux-saga](#usage-with-redux-saga)
@@ -702,7 +702,7 @@ const propsTypes = {
 
 Reducktion has a decent support for TypeScript (PRs welcome ❤). Adding basic typings should be quite straightforward but if you need to type every angle of your models it might take a bit more work. It would be nice to improve the typings so that more things could be inferred without manually defining your types (after all one of the goals of this library is to reduce boilerplate 😛).
 
-Check the `.models.ts` files in the typed [examples](./example/typed/src/components/order/order.model.ts) to see how Reducktion can be used with TypeScript.
+Check the `.model.ts` files in the typed [examples](./example/typed/src/components/order/order.model.ts) to see how Reducktion can be used with TypeScript.
 
 **TODO:** add more documentation about TypeScript.
 
