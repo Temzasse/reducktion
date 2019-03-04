@@ -1,7 +1,12 @@
 import * as React from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
-import { FetchableStatus, FetchableValue } from 'reducktion';
+
+import {
+  FetchableStatus,
+  FetchableValue,
+  FetchableValueSimple,
+} from 'reducktion';
 
 import orderModel from './order.model';
 import { Order } from './order.types';
@@ -9,9 +14,11 @@ import { Order } from './order.types';
 class OrderComp extends React.Component<{
   orders: FetchableValue<Order[]>;
   fetchOrders: () => any;
+  saveCreditCardState: FetchableValueSimple;
 }> {
   render() {
-    const { orders, fetchOrders } = this.props;
+    const { orders, fetchOrders, saveCreditCardState } = this.props;
+    console.log(':::> saveCreditCardState', saveCreditCardState);
 
     return (
       <Container>
@@ -22,9 +29,21 @@ class OrderComp extends React.Component<{
           <Loading>Loading orders...</Loading>
         )}
 
+        {saveCreditCardState.status === FetchableStatus.LOADING && (
+          <Loading>Saving card...</Loading>
+        )}
+
+        {saveCreditCardState.status === FetchableStatus.FAILURE && (
+          <Loading>Failed to save card!</Loading>
+        )}
+
+        {saveCreditCardState.status === FetchableStatus.SUCCESS && (
+          <Loading>Saved card!</Loading>
+        )}
+
         {orders.data.length > 0 && (
           <Orders>
-            {orders.data.map((order) => (
+            {orders.data.map(order => (
               <li key={order.id}>{order.name}</li>
             ))}
           </Orders>
@@ -50,6 +69,9 @@ const Orders = styled.ul`
 export default connect(
   state => ({
     orders: orderModel.selectors.get('orders')(state),
+    saveCreditCardState: orderModel.selectors.getAction('saveCreditCard')(
+      state
+    ),
   }),
   {
     fetchOrders: orderModel.actions.fetchOrders,

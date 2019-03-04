@@ -81,7 +81,17 @@ export const createModel = model => {
     return statePart[key];
   };
 
-  const selectors = { get: getSelector };
+  // TODO: maybe initialize tracked actions in initialState instead of
+  // returning `FetchableValueSimple` optimistically...
+  const getActionSelector = key => state => {
+    const statePart = state[model.name].actions || {};
+
+    return Object.prototype.hasOwnProperty.call(statePart, key)
+      ? statePart[key]
+      : { status: FETCHABLE_STATUS.INITIAL, error: null };
+  };
+
+  const selectors = { get: getSelector, getAction: getActionSelector };
 
   // Add selectors defined by user
   if (model.selectors) {

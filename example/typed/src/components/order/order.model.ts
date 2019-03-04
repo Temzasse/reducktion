@@ -26,6 +26,7 @@ export interface State {
 export interface Actions {
   fetchOrders: FetchableAction<Order[]>;
   fetchPackages: FetchableAction<Package[]>;
+  saveCreditCard: FetchableAction;
   fooAction: (lol: number) => any;
   lolAction: (lol: number) => any;
   someThunk: (arg: any) => any;
@@ -60,6 +61,7 @@ const model = createModel<State, Actions, Selectors, Deps>({
     lolAction: () => ({ ...initialState }),
 
     // Fetchable actions
+    saveCreditCard: fetchable.action(),
     fetchPackages: fetchable.action('packages'),
     fetchOrders: fetchable.action('orders', {
       // Define custom reducer for different statuses
@@ -102,6 +104,12 @@ const model = createModel<State, Actions, Selectors, Deps>({
 function* fetchOrdersSaga(action: any): any {
   console.log({ action });
   try {
+    yield put(model.actions.saveCreditCard())
+    yield sleep(1000);
+    yield put(model.actions.saveCreditCard.fail('Failed to save card'))
+    yield sleep(1000);
+    yield put(model.actions.saveCreditCard.success())
+
     // Select the fetchable value
     const x = yield select(model.selectors.getSomethingComplex);
     const orders2 = yield select(model.selectors.get('orders'));

@@ -64,13 +64,40 @@ export const handleThunks = (thunks, dependencies) =>
     return acc;
   }, {});
 
-const createFetchableReducers = ({ types, successField, overrides }) => {
-  if (!successField) {
-    throw Error(
-      'You must provide the name of the field that is used for success payload'
-    );
-  }
+const createSimpleFetchableReducers = ({ types, actionName }) => ({
+  [types.loading]: state => ({
+    ...state,
+    actions: {
+      ...state.actions,
+      [actionName]: {
+        status: FETCHABLE_STATUS.LOADING,
+        error: null,
+      },
+    },
+  }),
+  [types.success]: state => ({
+    ...state,
+    actions: {
+      ...state.actions,
+      [actionName]: {
+        status: FETCHABLE_STATUS.SUCCESS,
+        error: null,
+      },
+    },
+  }),
+  [types.failure]: (state, action) => ({
+    ...state,
+    actions: {
+      ...state.actions,
+      [actionName]: {
+        status: FETCHABLE_STATUS.FAILURE,
+        error: action.payload,
+      },
+    },
+  }),
+});
 
+const createFetchableReducers = ({ types, successField, overrides }) => {
   const defaultReducers = {
     [types.loading]: state => ({
       ...state,
@@ -133,11 +160,14 @@ export function handleFetchableAction(args, actionName, modelName) {
 
   // User can either provide only reducer field name for success case
   // or reducer overrides for `loading` / `success` / `failure` cases
-  const reducers = createFetchableReducers({
-    types: t,
-    successField: args.length > 0 ? args[0] : null,
-    overrides: args.length > 1 ? args[1] : {},
-  });
+  const successField = args.length > 0 ? args[0] : null;
+  const overrides = args.length > 1 ? args[1] : {};
+
+  // If no success field is provided -> create reducers for for tracking
+  // the status and error of the fetchable action
+  const reducers = successField
+    ? createFetchableReducers({ types: t, successField, overrides })
+    : createSimpleFetchableReducers({ types: t, actionName });
 
   // Return types that are inlined to the other types instead of accessing them
   // via `types.fetchSomething.success` you access them normally

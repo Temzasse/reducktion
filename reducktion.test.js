@@ -5,8 +5,6 @@ import {
   FetchableStatus,
 } from './src/reducktion';
 
-// TODO: fix tests related to auto-generated selectors!
-
 describe('fetchable', () => {
   it('should create fetchable value', () => {
     const f = fetchable.value([]);
@@ -30,6 +28,82 @@ describe('fetchable', () => {
     const reducer = fetchable.noop();
     const state = { test: 1, test2: 2 };
     expect(reducer(state)).toEqual(state);
+  });
+
+  it('should track fetchable action if no state field is given', () => {
+    const model = createModel({
+      name: 'test',
+      state: {
+        something: 1,
+      },
+      actions: () => ({
+        testAction: fetchable.action(),
+      }),
+    });
+
+    const state = { test: { something: 1 } };
+    const selector = model.selectors.getAction('testAction');
+
+    expect(selector(state)).toEqual({
+      status: FetchableStatus.INITIAL,
+      error: null,
+    });
+
+    state.test.actions = {
+      testAction: { status: FetchableStatus.LOADING, error: null },
+    };
+
+    expect(selector(state)).toEqual({
+      status: FetchableStatus.LOADING,
+      error: null,
+    });
+
+    state.test.actions = {
+      testAction: { status: FetchableStatus.FAILURE, error: 'err' },
+    };
+
+    expect(selector(state)).toEqual({
+      status: FetchableStatus.FAILURE,
+      error: 'err',
+    });
+
+    state.test.actions = {};
+
+    expect(selector(state)).toEqual({
+      status: FetchableStatus.INITIAL,
+      error: null,
+    });
+  });
+
+  it('should NOT track fetchable action when state field is given', () => {
+    const model = createModel({
+      name: 'test',
+      state: {
+        something: fetchable.value(1),
+      },
+      actions: () => ({
+        testAction: fetchable.action('something'),
+      }),
+    });
+
+    const state = {
+      test: {
+        something: { data: 1, status: FetchableStatus.INITIAL, error: null },
+      },
+    };
+
+    // NOTE: `getAction` returns a simple fetchable value even if `testAction`
+    // is not actually tracked
+    expect(model.selectors.getAction('testAction')(state)).toEqual({
+      status: FetchableStatus.INITIAL,
+      error: null,
+    });
+
+    expect(model.selectors.get('something')(state)).toEqual({
+      data: 1,
+      status: FetchableStatus.INITIAL,
+      error: null,
+    });
   });
 });
 
@@ -238,18 +312,6 @@ describe('createModel', () => {
       expect(model.selectors.get('orders')(state)).toEqual(orders);
     });
 
-    it('should throw if fetchable action has no success field', () => {
-      expect(() => {
-        createModel({
-          name: 'test',
-          state: {
-            orders: fetchable.value([]),
-          },
-          actions: () => ({ testAction: fetchable.action() }),
-        });
-      }).toThrowError(/you must provide the name of the field/i);
-    });
-
     it('should not require initial data for fetchable', () => {
       const model = createModel({
         name: 'test',
@@ -320,7 +382,7 @@ describe('initModels', () => {
       'toggleNotifications',
     ]);
     expect(Object.keys(settings.selectors).sort()).toEqual(
-      ['get', 'getCustomSelector'].sort()
+      ['get', 'getAction', 'getCustomSelector'].sort()
     );
     expect(settings.getSagas()).toEqual([]);
   });
