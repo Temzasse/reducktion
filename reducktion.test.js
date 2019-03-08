@@ -295,11 +295,13 @@ describe('createModel', () => {
       expect(model.actions.testAction.success).toBeDefined();
       expect(model.actions.testAction.fail).toBeDefined();
       expect(model.actions.testAction.init).toBeDefined();
+      expect(model.actions.testAction.clear).toBeDefined();
 
       expect(model.types.testAction).toEqual('test/testAction');
       expect(model.types.testActionInit).toEqual('test/testAction/init');
       expect(model.types.testActionSuccess).toEqual('test/testAction/success');
       expect(model.types.testActionFailure).toEqual('test/testAction/failure');
+      expect(model.types.testActionClear).toEqual('test/testAction/clear');
 
       const orders = {
         data: [],

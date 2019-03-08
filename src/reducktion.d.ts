@@ -125,6 +125,7 @@ export interface FetchableValue<Data = any> {
 }
 
 export interface FetchableAction<SuccessData = any> extends ActionFunc {
+  clear: ActionFunc;
   init: ActionFunc;
   fail: ActionFunc;
   success: ActionFunc<SuccessData>;

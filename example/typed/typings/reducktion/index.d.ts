@@ -126,6 +126,7 @@ declare module 'reducktion' {
   }
 
   export interface FetchableAction<SuccessData = any> extends ActionFunc {
+    clear: ActionFunc;
     init: ActionFunc;
     fail: ActionFunc;
     success: ActionFunc<SuccessData>;

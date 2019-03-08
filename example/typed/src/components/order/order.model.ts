@@ -109,6 +109,8 @@ function* fetchOrdersSaga(action: any): any {
     yield put(model.actions.saveCreditCard.fail('Failed to save card'))
     yield sleep(1000);
     yield put(model.actions.saveCreditCard.success())
+    yield sleep(1000);
+    yield put(model.actions.saveCreditCard.clear())
 
     // Select the fetchable value
     const x = yield select(model.selectors.getSomethingComplex);
@@ -133,6 +135,9 @@ function* fetchOrdersSaga(action: any): any {
         { id: 4, name: 'Mock order 4' },
       ])
     );
+
+    yield sleep(2000);
+    yield put(model.actions.fetchOrders.clear());
   } catch (error) {
     console.log('FAIL!', error);
     yield put(model.actions.fetchOrders.fail('Could not load orders!'));

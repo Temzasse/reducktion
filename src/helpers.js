@@ -95,6 +95,16 @@ const createSimpleFetchableReducers = ({ types, actionName }) => ({
       },
     },
   }),
+  [types.clear]: state => ({
+    ...state,
+    actions: {
+      ...state.actions,
+      [actionName]: {
+        status: FETCHABLE_STATUS.INITIAL,
+        error: null,
+      },
+    },
+  }),
 });
 
 const createFetchableReducers = ({ types, successField, overrides }) => {
@@ -123,6 +133,14 @@ const createFetchableReducers = ({ types, successField, overrides }) => {
         error: action.payload,
       },
     }),
+    [types.clear]: state => ({
+      ...state,
+      [successField]: {
+        ...state[successField],
+        status: FETCHABLE_STATUS.INITIAL,
+        error: null,
+      },
+    }),
   };
 
   if (!isObject(overrides)) return defaultReducers;
@@ -141,6 +159,7 @@ const createFetchableAction = types => {
   action.success = createAction(types.success);
   action.fail = createAction(types.failure);
   action.init = createAction(types.init);
+  action.clear = createAction(types.clear);
   return action;
 };
 
@@ -154,6 +173,8 @@ export function handleFetchableAction(args, actionName, modelName) {
     // NOTE: Also provide `init` for cases where loading should not be
     // dispatched as the default action
     init: `${typePrefix}/init`,
+    // Clear status back to `INITIAL`
+    clear: `${typePrefix}/clear`,
   };
 
   const action = createFetchableAction(t);
@@ -178,6 +199,7 @@ export function handleFetchableAction(args, actionName, modelName) {
     [`${actionName}Init`]: `${typePrefix}/init`,
     [`${actionName}Success`]: `${typePrefix}/success`,
     [`${actionName}Failure`]: `${typePrefix}/failure`,
+    [`${actionName}Clear`]: `${typePrefix}/clear`,
   };
 
   return { action, reducers, types };
