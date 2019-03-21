@@ -652,6 +652,31 @@ const model = createModel({
 });
 ```
 
+The default behaviour for `fetchable.success` reducer is to always replace the whole `data` field with the action's payload, so under the hood the updater function is the following:
+
+```js
+const updater = (data, action) => action.payload;
+```
+
+However, often you don't simply want to replace the data field but insted merge it with the payload somehow. For these use cases it is possible to pass an updater function to the fetchable action as the third parameter. Note that you don't need to pass the reducer definition object if you don't need it - a simple `null` is just fine.
+
+```js
+const mergeUpdater = (data, action) => ({ ...data, ...action.payload });
+const appendUpdater = (data, action) => [...data, ...action.payload];
+
+const model = createModel({
+  state: {
+    ordersById: fetchable.value({}),
+    otherField: fetchable.value([]),
+  },
+  actions: () => ({
+    fetchOrders: fetchable.action('ordersById', null, mergeUpdater),
+    fetchOtherField: fetchable.action('otherField', null, appendUpdater),
+  }),
+  // ...
+});
+```
+
 In some cases your actions don't need to update the state in any way and you might just want to listen to the action in your sagas. For these cases Reducktion also provides a helper function `fetchable.noop()` that returns a no-op reducer so the action won't update the state but you can still the action type when setuping your saga watchers.
 
 If you need to access the fetchable action types also in your `reactions` you can do it in the following way:

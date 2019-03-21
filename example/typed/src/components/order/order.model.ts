@@ -10,7 +10,7 @@ import {
   FetchableAction,
 } from 'reducktion';
 
-import { sleep } from '../../helpers';
+import { sleep, byIdUpdater } from '../../helpers';
 import { UserModel } from '../user/user.model';
 import { Order, Package } from './order.types';
 import { InitialState } from '../types';
@@ -20,7 +20,7 @@ export interface State {
   foo: number;
   bar: string;
   orders: FetchableValue<Order[]>;
-  packages: FetchableValue<Package[]>;
+  packagesById: FetchableValue<{ [id: string]: Package }>;
 }
 
 export interface Actions {
@@ -50,7 +50,7 @@ const model = createModel<State, Actions, Selectors, Deps>({
     foo: 1,
     bar: 'lol',
     orders: fetchable.value([]),
-    packages: fetchable.value([]),
+    packagesById: fetchable.value({}),
   },
   actions: ({ initialState }) => ({
     // Basic actions
@@ -62,7 +62,7 @@ const model = createModel<State, Actions, Selectors, Deps>({
 
     // Fetchable actions
     saveCreditCard: fetchable.action(),
-    fetchPackages: fetchable.action('packages'),
+    fetchPackages: fetchable.action('packagesById', null, byIdUpdater),
     fetchOrders: fetchable.action('orders', {
       // Define custom reducer for different statuses
       loading: state => ({ ...state, bar: 'loading' }),
@@ -104,13 +104,13 @@ const model = createModel<State, Actions, Selectors, Deps>({
 function* fetchOrdersSaga(action: any): any {
   console.log({ action });
   try {
-    yield put(model.actions.saveCreditCard())
+    yield put(model.actions.saveCreditCard());
     yield sleep(1000);
-    yield put(model.actions.saveCreditCard.fail('Failed to save card'))
+    yield put(model.actions.saveCreditCard.fail('Failed to save card'));
     yield sleep(1000);
-    yield put(model.actions.saveCreditCard.success())
+    yield put(model.actions.saveCreditCard.success());
     yield sleep(1000);
-    yield put(model.actions.saveCreditCard.clear())
+    yield put(model.actions.saveCreditCard.clear());
 
     // Select the fetchable value
     const x = yield select(model.selectors.getSomethingComplex);
@@ -138,6 +138,16 @@ function* fetchOrdersSaga(action: any): any {
 
     yield sleep(2000);
     yield put(model.actions.fetchOrders.clear());
+
+    yield put(
+      model.actions.fetchPackages.success([
+        { id: 'pkg1', name: 'Mock package 1' },
+        { id: 'pkg2', name: 'Mock package 2' },
+        { id: 'pkg3', name: 'Mock package 3' },
+        { id: 'pkg4', name: 'Mock package 4' },
+      ])
+    );
+
   } catch (error) {
     console.log('FAIL!', error);
     yield put(model.actions.fetchOrders.fail('Could not load orders!'));

@@ -5,6 +5,8 @@ import {
   FetchableStatus,
 } from './src/reducktion';
 
+// TODO: add tests with real redux store...
+
 describe('fetchable', () => {
   it('should create fetchable value', () => {
     const f = fetchable.value([]);
@@ -103,6 +105,87 @@ describe('fetchable', () => {
       data: 1,
       status: FetchableStatus.INITIAL,
       error: null,
+    });
+  });
+
+  it('should accept data updater function for fetchable action', () => {
+    const mergeUpdater = (data, action) => ({ ...data, ...action.payload });
+    const appendUpdater = (data, action) => [...data, ...action.payload];
+
+    const model1 = createModel({
+      name: 'test1',
+      state: {
+        testData: fetchable.value({}),
+        otherField: null,
+      },
+      actions: () => ({
+        testAction: fetchable.action(
+          'testData',
+          {
+            loading: state => ({ ...state, otherField: 1 }),
+            success: state => ({ ...state, otherField: 2 }),
+            failure: state => ({ ...state, otherField: 3 }),
+          },
+          mergeUpdater
+        ),
+      }),
+    });
+
+    const model2 = createModel({
+      name: 'test2',
+      state: {
+        testData: fetchable.value([]),
+      },
+      actions: () => ({
+        testAction: fetchable.action('testData', null, appendUpdater),
+      }),
+    });
+
+    const models = initModels([model1, model2]);
+
+    expect(models.allReducers.test1).toBeDefined();
+    expect(models.allReducers.test2).toBeDefined();
+
+    const state1 = {
+      testData: {
+        data: { field1: 1 },
+        status: 'INITIAL',
+        error: null,
+      },
+      otherField: null,
+    };
+    const action1 = {
+      type: 'test1/testAction/success',
+      payload: { field2: 2, field3: 3 },
+    };
+
+    expect(models.allReducers.test1(state1, action1)).toEqual({
+      testData: {
+        data: { field1: 1, field2: 2, field3: 3 },
+        status: 'SUCCESS',
+        error: null,
+      },
+      otherField: 2,
+    });
+
+    const state2 = {
+      testData: {
+        data: [1],
+        status: 'INITIAL',
+        error: null,
+      },
+    };
+    const action2 = {
+      type: 'test2/testAction/success',
+      payload: [2, 3],
+    };
+
+    expect(models.allReducers.test2(state2, action2)).toEqual({
+      testData: {
+        data: [1, 2, 3],
+        status: 'SUCCESS',
+        error: null,
+      },
     });
   });
 });

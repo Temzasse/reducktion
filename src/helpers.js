@@ -107,7 +107,15 @@ const createSimpleFetchableReducers = ({ types, actionName }) => ({
   }),
 });
 
-const createFetchableReducers = ({ types, successField, overrides }) => {
+// Default data updater just replaces the data field with the action payload
+const defaultDataUpdater = (data, action) => action.payload;
+
+const createFetchableReducers = ({
+  types,
+  successField,
+  overrides,
+  updater,
+}) => {
   const defaultReducers = {
     [types.loading]: state => ({
       ...state,
@@ -120,7 +128,7 @@ const createFetchableReducers = ({ types, successField, overrides }) => {
     [types.success]: (state, action) => ({
       ...state,
       [successField]: {
-        data: action.payload,
+        data: updater(state[successField].data, action),
         status: FETCHABLE_STATUS.SUCCESS,
         error: null,
       },
@@ -182,12 +190,13 @@ export function handleFetchableAction(args, actionName, modelName) {
   // User can either provide only reducer field name for success case
   // or reducer overrides for `loading` / `success` / `failure` cases
   const successField = args.length > 0 ? args[0] : null;
-  const overrides = args.length > 1 ? args[1] : {};
+  const overrides = args.length > 1 ? args[1] || {} : {};
+  const updater = args.length > 2 ? args[2] : defaultDataUpdater;
 
   // If no success field is provided -> create reducers for for tracking
   // the status and error of the fetchable action
   const reducers = successField
-    ? createFetchableReducers({ types: t, successField, overrides })
+    ? createFetchableReducers({ types: t, successField, overrides, updater })
     : createSimpleFetchableReducers({ types: t, actionName });
 
   // Return types that are inlined to the other types instead of accessing them

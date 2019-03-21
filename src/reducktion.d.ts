@@ -42,7 +42,9 @@ interface Fetchable {
   action: <State, K extends keyof State>(
     // Only allow state fields for fetchable values
     stateField?: FetchableValue extends State[K] ? K : never,
-    customReducers?: Partial<FetchableReducers<State>>
+    customReducers?: Partial<FetchableReducers<State>> | null,
+    // TODO: can we provide better types here?
+    dataUpdater?: (data: any, action: any) => any,
   ) => FetchableReducers<State>;
   noop: () => NoopReducer;
 }

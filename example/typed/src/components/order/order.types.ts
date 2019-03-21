@@ -7,5 +7,6 @@ export interface Order {
 }
 
 export interface Package {
+  id: string;
   name: string;
 }
