@@ -115,6 +115,7 @@ const createFetchableReducers = ({
   successField,
   overrides,
   updater,
+  initialValue,
 }) => {
   const defaultReducers = {
     [types.loading]: state => ({
@@ -144,7 +145,7 @@ const createFetchableReducers = ({
     [types.clear]: state => ({
       ...state,
       [successField]: {
-        ...state[successField],
+        data: initialValue,
         status: FETCHABLE_STATUS.INITIAL,
         error: null,
       },
@@ -171,7 +172,12 @@ const createFetchableAction = types => {
   return action;
 };
 
-export function handleFetchableAction(args, actionName, modelName) {
+export function handleFetchableAction({
+  args,
+  actionName,
+  modelName,
+  initialState,
+}) {
   const typePrefix = `${modelName}/${actionName}`;
 
   const t = {
@@ -190,14 +196,21 @@ export function handleFetchableAction(args, actionName, modelName) {
   // User can either provide only reducer field name for success case
   // or reducer overrides for `loading` / `success` / `failure` cases
   const successField = args.length > 0 ? args[0] : null;
-  const overrides = args.length > 1 ? args[1] || {} : {};
-  const updater = args.length > 2 ? args[2] : defaultDataUpdater;
 
   // If no success field is provided -> create reducers for for tracking
   // the status and error of the fetchable action
+
+  /* eslint-disable indent */
   const reducers = successField
-    ? createFetchableReducers({ types: t, successField, overrides, updater })
+    ? createFetchableReducers({
+        types: t,
+        successField,
+        overrides: args.length > 1 ? args[1] || {} : {},
+        updater: args.length > 2 ? args[2] : defaultDataUpdater,
+        initialValue: initialState[successField].data,
+      })
     : createSimpleFetchableReducers({ types: t, actionName });
+  /* eslint-enable indent */
 
   // Return types that are inlined to the other types instead of accessing them
   // via `types.fetchSomething.success` you access them normally

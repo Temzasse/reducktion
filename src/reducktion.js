@@ -36,11 +36,12 @@ export const createModel = model => {
     ([actionName, reducerHandler]) => {
       if (isFetchableAction(reducerHandler)) {
         // Handle async API actions
-        const fetchableX = handleFetchableAction(
-          reducerHandler.args,
+        const fetchableX = handleFetchableAction({
           actionName,
-          model.name
-        );
+          initialState,
+          args: reducerHandler.args,
+          modelName: model.name,
+        });
 
         // Inline fetchable types
         Object.entries(fetchableX.types).forEach(([k, v]) => {

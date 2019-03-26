@@ -34,6 +34,7 @@ declare module 'reducktion' {
     loading: Reducer<State>;
     success: Reducer<State>;
     failure: Reducer<State>;
+    clear: Reducer<State>;
   }
 
   type NoopReducer = (state: any) => any;
